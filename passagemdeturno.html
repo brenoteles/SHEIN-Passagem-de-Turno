@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Turno</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Estilos do Formulário (Mobile) */
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
+        .form-container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        h2 { text-align: center; color: #333; font-size: 22px; }
+        h3 { font-size: 16px; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 25px; }
+        label { display: block; font-size: 14px; font-weight: bold; color: #555; margin-top: 12px; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: #fff; }
+        button { width: 100%; padding: 15px; background: #25D366; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 30px; cursor: pointer; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.3); }
+        button:active { background: #1ebc5a; }
+        
+        /* Estilos da Imagem Gerada (Oculta na tela principal) */
+        #canvasArea { 
+            position: absolute; left: -9999px; width: 450px; padding: 30px; 
+            background: #ffffff; border-radius: 10px; border-top: 8px solid #007bff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05); font-family: 'Segoe UI', sans-serif;
+        }
+        .header-img { text-align: center; color: #333; font-size: 22px; font-weight: bold; margin-bottom: 5px; }
+        .date-img { text-align: center; font-size: 12px; color: #888; margin-bottom: 20px; }
+        .section-img { margin-bottom: 15px; }
+        .section-title { font-size: 15px; font-weight: bold; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; }
+        .item-img { font-size: 14px; color: #444; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;}
+        .item-val { font-weight: bold; color: #111; text-align: right; max-width: 55%; }
+        .status-alert { color: #d9534f; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Passagem de Turno</h2>
+    
+    <h3>📋 Declaração</h3>
+    <label>Qtd de AWBs importadas:</label> <input type="number" id="f_imp" placeholder="Qtd de AWBs">
+    <label>Qtd de AWBs manifestadas:</label> <input type="number" id="f_manif" placeholder="Qtd de AWBs">
+    <label>Qtd de AWBs declaradas:</label> <input type="number" id="f_decl" placeholder="Qtd de AWBs">
+    <label>Troca de regime pendente:</label> <input type="text" id="f_regime" placeholder="Ex: Sim, 5 AWBs">
+    <label>AWBs pendentes de importação-declaração:</label> <input type="number" id="f_pend_decl" placeholder="Qtd de AWBs">
+
+    <h3>💰 Presença e Pagamento de DARF</h3>
+    <label>Presenças feitas:</label> <input type="number" id="f_presenca" placeholder="Qtd de AWBs">
+    <label>Envios para pagamento:</label> <input type="number" id="f_pgto" placeholder="Qtd de AWBs">
+    <label>Pendentes (Presença/DARF/Envio):</label> <input type="number" id="f_pend_darf" placeholder="Qtd de AWBs">
+    <label>AWBs pendentes de desembaraço:</label> <input type="number" id="f_desemb" placeholder="Qtd de AWBs">
+    
+    <label>Horário de pgto. da AWB pendente há mais tempo:</label> 
+    <input type="datetime-local" id="f_hora">
+
+    <label>Status do Sistema - Presença:</label>
+    <select id="f_sys_presenca">
+        <option value="Normal">Normal</option>
+        <option value="Com Problema">Com Problema</option>
+    </select>
+    
+    <label>Status do Sistema - Geração de DARF:</label>
+    <select id="f_sys_darf">
+        <option value="Normal">Normal</option>
+        <option value="Com Problema">Com Problema</option>
+    </select>
+
+    <label>Status do Sistema - Pagamento:</label>
+    <select id="f_sys_pgto">
+        <option value="Normal">Normal</option>
+        <option value="Com Problema">Com Problema</option>
+    </select>
+
+    <label>Status do Sistema - Desembaraço:</label>
+    <select id="f_sys_desemb">
+        <option value="Normal">Normal</option>
+        <option value="Com Problema">Com Problema</option>
+    </select>
+
+    <h3>📄 ICMS (Status)</h3>
+    <label>GNRE ES:</label>
+    <select id="f_es">
+        <option value="Gerado">Gerado</option>
+        <option value="Não Gerado">Não Gerado</option>
+        <option value="Sistema com Problema">Sistema com Problema</option>
+    </select>
+
+    <label>GNRE PE:</label>
+    <select id="f_pe">
+        <option value="Gerado">Gerado</option>
+        <option value="Não Gerado">Não Gerado</option>
+        <option value="Sistema com Problema">Sistema com Problema</option>
+    </select>
+
+    <label>DARE:</label>
+    <select id="f_dare">
+        <option value="Gerado">Gerado</option>
+        <option value="Não Gerado">Não Gerado</option>
+        <option value="Sistema com Problema">Sistema com Problema</option>
+    </select>
+
+    <h3>📦 Fiscalização e Devolução</h3>
+    <label>Mangas/Gaiolas/Paletes pendentes:</label> <input type="number" id="f_gaiolas" placeholder="Qtd pendente">
+    <label>Quantidade de Mangas/Gaiolas/Paletes concluídos:</label> <input type="number" id="f_gaiolas_conc" placeholder="Qtd concluída">
+    
+    <button onclick="prepararRelatorio()">Gerar Imagem e Compartilhar</button>
+</div>
+
+<div id="canvasArea">
+    <div class="header-img">Relatório de Passagem de Turno</div>
+    <div class="date-img" id="data-img"></div>
+
+    <div class="section-img">
+        <div class="section-title">Declaração (Por AWB)</div>
+        <div class="item-img">Qtd de AWBs importadas: <span class="item-val" id="r_imp">-</span></div>
+        <div class="item-img">Qtd de AWBs manifestadas: <span class="item-val" id="r_manif">-</span></div>
+        <div class="item-img">Qtd de AWBs declaradas: <span class="item-val" id="r_decl">-</span></div>
+        <div class="item-img">Troca de regime: <span class="item-val" id="r_regime">-</span></div>
+        <div class="item-img">AWBs pend. de importação-declaração: <span class="item-val" id="r_pend_decl">-</span></div>
+    </div>
+
+    <div class="section-img">
+        <div class="section-title">Presença e Pagamento (Por AWB)</div>
+        <div class="item-img">Presenças feitas: <span class="item-val" id="r_presenca">-</span></div>
+        <div class="item-img">Envios para pgto: <span class="item-val" id="r_pgto">-</span></div>
+        <div class="item-img">Pendentes Pres./DARF/Envio: <span class="item-val" id="r_pend_darf">-</span></div>
+        <div class="item-img">AWBs pendentes de desembaraço: <span class="item-val" id="r_desemb">-</span></div>
+        <div class="item-img">Pgto. da AWB pendente há mais tempo: <span class="item-val" id="r_hora">-</span></div>
+        <div style="margin-top: 10px; font-size: 13px; color: #666;">Status dos Sistemas:</div>
+        <div class="item-img">- Presença: <span class="item-val" id="r_sys_presenca"></span></div>
+        <div class="item-img">- Geração DARF: <span class="item-val" id="r_sys_darf"></span></div>
+        <div class="item-img">- Pagamento: <span class="item-val" id="r_sys_pgto"></span></div>
+        <div class="item-img">- Desembaraço: <span class="item-val" id="r_sys_desemb"></span></div>
+    </div>
+
+    <div class="section-img">
+        <div class="section-title">ICMS</div>
+        <div class="item-img">GNRE ES: <span class="item-val" id="r_es">-</span></div>
+        <div class="item-img">GNRE PE: <span class="item-val" id="r_pe">-</span></div>
+        <div class="item-img">DARE: <span class="item-val" id="r_dare">-</span></div>
+    </div>
+
+    <div class="section-img">
+        <div class="section-title">Fiscalização e Devolução</div>
+        <div class="item-img">Mangas/Gaiolas/Paletes pendentes: <span class="item-val" id="r_gaiolas">-</span></div>
+        <div class="item-img">Mangas/Gaiolas/Paletes concluídos: <span class="item-val" id="r_gaiolas_conc">-</span></div>
+    </div>
+</div>
+
+<script>
+    function preencherValor(idOrigem, idDestino) {
+        let valor = document.getElementById(idOrigem).value;
+        let destino = document.getElementById(idDestino);
+        destino.innerText = valor ? valor : '0';
+        
+        if (valor === "Com Problema" || valor === "Sistema com Problema") {
+            destino.classList.add("status-alert");
+        } else {
+            destino.classList.remove("status-alert");
+        }
+    }
+
+    function formatarDataHora(inputDatetime) {
+        if(!inputDatetime) return '-';
+        let partes = inputDatetime.split('T');
+        if(partes.length < 2) return inputDatetime;
+        let dataStr = partes[0].split('-').reverse().join('/');
+        let horaStr = partes[1];
+        return `${dataStr} às ${horaStr}`;
+    }
+
+    function prepararRelatorio() {
+        // Data e Hora do Relatório
+        const agora = new Date().toLocaleString('pt-BR');
+        document.getElementById('data-img').innerText = "Gerado em: " + agora;
+
+        // Declaração
+        preencherValor('f_imp', 'r_imp');
+        preencherValor('f_manif', 'r_manif');
+        preencherValor('f_decl', 'r_decl');
+        preencherValor('f_regime', 'r_regime');
+        preencherValor('f_pend_decl', 'r_pend_decl');
+        
+        // Presença e Pagamento
+        preencherValor('f_presenca', 'r_presenca');
+        preencherValor('f_pgto', 'r_pgto');
+        preencherValor('f_pend_darf', 'r_pend_darf');
+        preencherValor('f_desemb', 'r_desemb');
+        
+        let inputHora = document.getElementById('f_hora').value;
+        document.getElementById('r_hora').innerText = formatarDataHora(inputHora);
+
+        preencherValor('f_sys_presenca', 'r_sys_presenca');
+        preencherValor('f_sys_darf', 'r_sys_darf');
+        preencherValor('f_sys_pgto', 'r_sys_pgto');
+        preencherValor('f_sys_desemb', 'r_sys_desemb');
+
+        // ICMS
+        preencherValor('f_es', 'r_es');
+        preencherValor('f_pe', 'r_pe');
+        preencherValor('f_dare', 'r_dare');
+
+        // Fiscalização
+        preencherValor('f_gaiolas', 'r_gaiolas');
+        preencherValor('f_gaiolas_conc', 'r_gaiolas_conc');
+
+        // Gerar a imagem 
+        html2canvas(document.querySelector("#canvasArea")).then(canvas => {
+            const dataURL = canvas.toDataURL("image/png");
+            
+            // 1. Download
+            const link = document.createElement('a');
+            link.download = 'relatorio_turno.png';
+            link.href = dataURL;
+            link.click();
+
+            // 2. Abertura do WhatsApp
+            setTimeout(() => {
+                const msg = encodeURIComponent("Segue o relatório de passagem de turno atualizado em anexo.");
+                window.location.href = `https://wa.me/?text=${msg}`;
+            }, 500); 
+        });
+    }
+</script>
+
+</body>
+</html>
