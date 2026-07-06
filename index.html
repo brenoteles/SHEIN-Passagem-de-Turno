@@ -227,9 +227,6 @@
                         })
                         .catch(err => console.log("Compartilhamento cancelado ou falhou:", err));
                     }, 400);
-                } else {
-                    // Mensagem amigável caso o usuário esteja em um navegador antigo ou PC sem compartilhamento nativo de arquivos
-                    alert("Imagem salva na sua galeria/downloads! Agora basta abrir o WhatsApp e anexar o arquivo gerado.");
                 }
             }, 'image/png');
         });
