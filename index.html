@@ -6,17 +6,19 @@
     <title>Relatório de Turno</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* Estilos do Formulário (Mobile) */
+        /* Estilos do Formulário (Mobile-First) */
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
         .form-container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        h2 { text-align: center; color: #333; font-size: 22px; }
+        h2 { text-align: center; color: #333; font-size: 22px; margin-top: 10px; }
         h3 { font-size: 16px; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 25px; }
         label { display: block; font-size: 14px; font-weight: bold; color: #555; margin-top: 12px; }
         input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: #fff; }
-        button { width: 100%; padding: 15px; background: #25D366; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 30px; cursor: pointer; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.3); }
-        button:active { background: #1ebc5a; }
         
-        /* Estilos da Imagem Gerada (Oculta na tela principal) */
+        .btn-container { position: sticky; bottom: 0; background: white; padding: 10px 0; margin-top: 30px; border-top: 1px solid #eee; }
+        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3); }
+        button:active { background: #0056b3; }
+        
+        /* Estilos da Imagem Gerada (Renderizada fora da área visível) */
         #canvasArea { 
             position: absolute; left: -9999px; width: 450px; padding: 30px; 
             background: #ffffff; border-radius: 10px; border-top: 8px solid #007bff;
@@ -102,7 +104,9 @@
     <label>Mangas/Gaiolas/Paletes pendentes:</label> <input type="number" id="f_gaiolas" placeholder="Qtd pendente">
     <label>Quantidade de Mangas/Gaiolas/Paletes concluídos:</label> <input type="number" id="f_gaiolas_conc" placeholder="Qtd concluída">
     
-    <button onclick="prepararRelatorio()">Gerar Imagem e Compartilhar</button>
+    <div class="btn-container">
+        <button onclick="processarRelatorio()">Baixar e Compartilhar Relatório</button>
+    </div>
 </div>
 
 <div id="canvasArea">
@@ -168,19 +172,17 @@
         return `${dataStr} às ${horaStr}`;
     }
 
-    function prepararRelatorio() {
-        // Data e Hora do Relatório
+    function processarRelatorio() {
+        // 1. Atualizar a data de geração no topo do relatório oculto
         const agora = new Date().toLocaleString('pt-BR');
         document.getElementById('data-img').innerText = "Gerado em: " + agora;
 
-        // Declaração
+        // 2. Mapear dados para o design final da imagem
         preencherValor('f_imp', 'r_imp');
         preencherValor('f_manif', 'r_manif');
         preencherValor('f_decl', 'r_decl');
         preencherValor('f_regime', 'r_regime');
         preencherValor('f_pend_decl', 'r_pend_decl');
-        
-        // Presença e Pagamento
         preencherValor('f_presenca', 'r_presenca');
         preencherValor('f_pgto', 'r_pgto');
         preencherValor('f_pend_darf', 'r_pend_darf');
@@ -193,31 +195,43 @@
         preencherValor('f_sys_darf', 'r_sys_darf');
         preencherValor('f_sys_pgto', 'r_sys_pgto');
         preencherValor('f_sys_desemb', 'r_sys_desemb');
-
-        // ICMS
         preencherValor('f_es', 'r_es');
         preencherValor('f_pe', 'r_pe');
         preencherValor('f_dare', 'r_dare');
-
-        // Fiscalização
         preencherValor('f_gaiolas', 'r_gaiolas');
         preencherValor('f_gaiolas_conc', 'r_gaiolas_conc');
 
-        // Gerar a imagem 
-        html2canvas(document.querySelector("#canvasArea")).then(canvas => {
-            const dataURL = canvas.toDataURL("image/png");
-            
-            // 1. Download
-            const link = document.createElement('a');
-            link.download = 'relatorio_turno.png';
-            link.href = dataURL;
-            link.click();
+        // 3. Renderizar a div oculta em um elemento de Imagem/Canvas
+        html2canvas(document.querySelector("#canvasArea"), { scale: 2 }).then(canvas => {
+            canvas.toBlob(blob => {
+                const nomeArquivo = 'relatorio_passagem_turno.png';
+                
+                // Forçar o download local automático do arquivo para o dispositivo do usuário
+                const urlDownload = URL.createObjectURL(blob);
+                const linkDownload = document.createElement('a');
+                linkDownload.download = nomeArquivo;
+                linkDownload.href = urlDownload;
+                linkDownload.click();
+                URL.revokeObjectURL(urlDownload);
 
-            // 2. Abertura do WhatsApp
-            setTimeout(() => {
-                const msg = encodeURIComponent("Segue o relatório de passagem de turno atualizado em anexo.");
-                window.location.href = `https://wa.me/?text=${msg}`;
-            }, 500); 
+                // Tentar usar o compartilhamento nativo do smartphone (se disponível no navegador mobile)
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], nomeArquivo, { type: blob.type })] })) {
+                    const arquivoParaCompartilhar = new File([blob], nomeArquivo, { type: blob.type });
+                    
+                    // Pequena pausa técnica para garantir que o download não interfira no menu nativo
+                    setTimeout(() => {
+                        navigator.share({
+                            files: [arquivoParaCompartilhar],
+                            title: 'Relatório de Passagem de Turno',
+                            text: 'Segue em anexo a imagem do relatório de turno.'
+                        })
+                        .catch(err => console.log("Compartilhamento cancelado ou falhou:", err));
+                    }, 400);
+                } else {
+                    // Mensagem amigável caso o usuário esteja em um navegador antigo ou PC sem compartilhamento nativo de arquivos
+                    alert("Imagem salva na sua galeria/downloads! Agora basta abrir o WhatsApp e anexar o arquivo gerado.");
+                }
+            }, 'image/png');
         });
     }
 </script>
