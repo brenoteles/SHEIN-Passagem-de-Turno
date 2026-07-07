@@ -223,7 +223,7 @@
                         navigator.share({
                             files: [arquivoParaCompartilhar],
                             title: 'Relatório de Passagem de Turno',
-                            text: 'Segue em anexo a imagem do relatório de turno.'
+                            text: `Passagem de turno gerada em: ${new Date().toLocaleString('pt-BR')}`
                         })
                         .catch(err => console.log("Compartilhamento cancelado ou falhou:", err));
                     }, 400);
