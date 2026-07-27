@@ -6,52 +6,97 @@
     <title>Relatório de Turno</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* Estilos do Formulário (Mobile-First) */
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
-        .form-container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        /* Estilos base */
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
+        
+        /* Estilos do Formulário (UI) */
+        .form-container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
         h2 { text-align: center; color: #333; font-size: 22px; margin-top: 10px; }
-        h3 { font-size: 16px; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 25px; }
-        label { display: block; font-size: 14px; font-weight: bold; color: #555; margin-top: 12px; }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: #fff; }
+        h3 { font-size: 16px; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 25px; display: flex; align-items: center; gap: 8px;}
+        label { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: bold; color: #555; margin-top: 12px; }
+        
+        /* Destaque para labels de pendências no formulário */
+        .label-alerta { color: #d9534f; font-weight: 800; }
+
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: #fff; font-family: 'Segoe UI', Arial, sans-serif; }
+        textarea { resize: vertical; min-height: 80px; }
         
         .btn-container { position: sticky; bottom: 0; background: white; padding: 10px 0; margin-top: 30px; border-top: 1px solid #eee; }
         button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3); }
         button:active { background: #0056b3; }
         
-        /* Estilos da Imagem Gerada (Renderizada fora da área visível) */
+        /* Ícones SVG para padronização (Sem depender do OS) */
+        .svg-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .svg-alert { width: 18px; height: 18px; stroke: #d9534f; flex-shrink: 0; }
+        
+        /* Estilos da Imagem Gerada (Renderizada com TAMANHO FIXO de 650px) */
         #canvasArea { 
-            position: absolute; left: -9999px; width: 450px; padding: 30px; 
-            background: #ffffff; border-radius: 10px; border-top: 8px solid #007bff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05); font-family: 'Segoe UI', sans-serif;
+            position: absolute; left: -9999px; top: 0; 
+            width: 650px; /* Largura fixa para padronizar PC e Mobile */
+            padding: 40px; 
+            background: #ffffff; border-radius: 10px; border-top: 10px solid #007bff;
+            box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif;
         }
-        .header-img { text-align: center; color: #333; font-size: 22px; font-weight: bold; margin-bottom: 5px; }
-        .date-img { text-align: center; font-size: 12px; color: #888; margin-bottom: 20px; }
-        .section-img { margin-bottom: 15px; }
-        .section-title { font-size: 15px; font-weight: bold; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; }
-        .item-img { font-size: 14px; color: #444; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;}
-        .item-val { font-weight: bold; color: #111; text-align: right; max-width: 55%; }
+        
+        .header-img { text-align: center; color: #333; font-size: 26px; font-weight: bold; margin-bottom: 5px; }
+        .date-img { text-align: center; font-size: 14px; color: #888; margin-bottom: 25px; }
+        
+        .section-img { margin-bottom: 20px; }
+        .section-title { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: bold; color: #007bff; border-bottom: 2px solid #f0f0f0; padding-bottom: 6px; margin-bottom: 12px; }
+        
+        /* Layout flexível para alinhar perfeitamente os textos */
+        .item-img { font-size: 15px; color: #444; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; padding: 2px 0;}
+        .item-label { display: flex; align-items: center; gap: 6px; flex: 1; padding-right: 15px; }
+        
+        /* Destaque para itens pendentes no relatório gerado */
+        .item-destaque { 
+            background-color: #fff4f4; 
+            border-left: 5px solid #d9534f; 
+            padding: 8px 10px; 
+            border-radius: 4px; 
+            margin: 8px 0; 
+            display: flex; justify-content: space-between; align-items: center; 
+            font-size: 15px; font-weight: bold; color: #a94442;
+        }
+        .item-destaque .item-label { flex: 1; padding-right: 15px; }
+        .item-destaque .item-val { color: #d9534f; font-size: 16px; }
+
+        .item-val { font-weight: bold; color: #111; text-align: right; white-space: nowrap; flex-shrink: 0; }
         .status-alert { color: #d9534f; }
+        
+        /* Caixa de observações na imagem */
+        .obs-box { background: #f9f9f9; border: 1px dashed #ccc; padding: 15px; border-radius: 8px; font-size: 15px; color: #444; white-space: pre-wrap; word-break: break-word; min-height: 50px; margin-top: 10px; line-height: 1.5;}
     </style>
 </head>
 <body>
 
+<!-- Ícones SVG Reutilizáveis -->
+<svg style="display: none;">
+    <symbol id="icon-decl" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></symbol>
+    <symbol id="icon-money" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></symbol>
+    <symbol id="icon-icms" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></symbol>
+    <symbol id="icon-box" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></symbol>
+    <symbol id="icon-obs" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></symbol>
+</svg>
+
 <div class="form-container">
     <h2>Passagem de Turno</h2>
     
-    <h3>📋 Declaração</h3>
+    <h3><svg class="svg-icon"><use href="#icon-decl"></use></svg> Declaração</h3>
     <label>Qtd de AWBs importadas:</label> <input type="number" id="f_imp" placeholder="Qtd de AWBs">
     <label>Qtd de AWBs manifestadas:</label> <input type="number" id="f_manif" placeholder="Qtd de AWBs">
     <label>Qtd de AWBs declaradas:</label> <input type="number" id="f_decl" placeholder="Qtd de AWBs">
-    <label>Troca de regime pendente:</label> <input type="text" id="f_regime" placeholder="Ex: Sim, 5 AWBs">
-    <label>AWBs pendentes de importação-declaração:</label> <input type="number" id="f_pend_decl" placeholder="Qtd de AWBs">
+    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> AWBs pendentes de troca de regime:</label> <input type="text" id="f_regime" placeholder="Qtd de AWBs">
+    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> AWBs pend. importação-declaração:</label> <input type="number" id="f_pend_decl" placeholder="Qtd de AWBs">
 
-    <h3>💰 Presença e Pagamento de DARF</h3>
+    <h3><svg class="svg-icon"><use href="#icon-money"></use></svg> Presença e Pagamento de DARF</h3>
     <label>Presenças feitas:</label> <input type="number" id="f_presenca" placeholder="Qtd de AWBs">
     <label>Envios para pagamento:</label> <input type="number" id="f_pgto" placeholder="Qtd de AWBs">
-    <label>Pendentes (Presença/DARF/Envio):</label> <input type="number" id="f_pend_darf" placeholder="Qtd de AWBs">
-    <label>AWBs pendentes de desembaraço:</label> <input type="number" id="f_desemb" placeholder="Qtd de AWBs">
+    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Pendentes (Presença/DARF/Envio):</label> <input type="number" id="f_pend_darf" placeholder="Qtd de AWBs">
+    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> AWBs pendentes de desembaraço:</label> <input type="number" id="f_desemb" placeholder="Qtd de AWBs">
     
-    <label>Hora de PG. da AWB pendente de desembaraço há mais tempo:</label> 
+    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Hora de PG. da AWB pendente há mais tempo:</label> 
     <input type="datetime-local" id="f_hora">
 
     <label>Status do Sistema - Presença:</label>
@@ -78,7 +123,7 @@
         <option value="Com Problema">Com Problema</option>
     </select>
 
-    <h3>📄 ICMS (Status)</h3>
+    <h3><svg class="svg-icon"><use href="#icon-icms"></use></svg> ICMS (Status)</h3>
     <label>GNRE ES:</label>
     <select id="f_es">
         <option value="Gerado">Gerado</option>
@@ -100,53 +145,66 @@
         <option value="Sistema com Problema">Sistema com Problema</option>
     </select>
 
-    <h3>📦 Fiscalização e Devolução</h3>
-    <label>Mangas/Gaiolas/Paletes pendentes:</label> <input type="number" id="f_gaiolas" placeholder="Qtd pendente">
-    <label>Quantidade de Mangas/Gaiolas/Paletes concluídos:</label> <input type="number" id="f_gaiolas_conc" placeholder="Qtd concluída">
+    <h3><svg class="svg-icon"><use href="#icon-box"></use></svg> Fiscalização e Devolução</h3>
+    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Mangas/Gaiolas/Paletes pendentes:</label> <input type="number" id="f_gaiolas" placeholder="Qtd pendente">
+    <label>Mangas/Gaiolas/Paletes concluídos:</label> <input type="number" id="f_gaiolas_conc" placeholder="Qtd concluída">
     
+    <h3><svg class="svg-icon"><use href="#icon-obs"></use></svg> Observações Gerais</h3>
+    <label>Anotações do turno (Opcional):</label>
+    <textarea id="f_obs" placeholder="Informe aqui qualquer ocorrência, aviso ou detalhe relevante..."></textarea>
+
     <div class="btn-container">
         <button onclick="processarRelatorio()">Baixar e Compartilhar Relatório</button>
     </div>
 </div>
 
+<!-- ============================================== -->
+<!-- ÁREA OCULTA QUE SERÁ TRANSFORMADA EM IMAGEM    -->
+<!-- ============================================== -->
 <div id="canvasArea">
     <div class="header-img">Relatório de Passagem de Turno</div>
     <div class="date-img" id="data-img"></div>
 
     <div class="section-img">
-        <div class="section-title">Declaração (Por AWB)</div>
-        <div class="item-img">Qtd de AWBs importadas: <span class="item-val" id="r_imp">-</span></div>
-        <div class="item-img">Qtd de AWBs manifestadas: <span class="item-val" id="r_manif">-</span></div>
-        <div class="item-img">Qtd de AWBs declaradas: <span class="item-val" id="r_decl">-</span></div>
-        <div class="item-img">Troca de regime: <span class="item-val" id="r_regime">-</span></div>
-        <div class="item-img">AWBs pend. de importação-declaração: <span class="item-val" id="r_pend_decl">-</span></div>
+        <div class="section-title"><svg class="svg-icon"><use href="#icon-decl"></use></svg> Declaração (Por AWB)</div>
+        <div class="item-img"><span class="item-label">Qtd de AWBs importadas:</span> <span class="item-val" id="r_imp">-</span></div>
+        <div class="item-img"><span class="item-label">Qtd de AWBs manifestadas:</span> <span class="item-val" id="r_manif">-</span></div>
+        <div class="item-img"><span class="item-label">Qtd de AWBs declaradas:</span> <span class="item-val" id="r_decl">-</span></div>
+        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Troca de regime:</span> <span class="item-val" id="r_regime">-</span></div>
+        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> AWBs pend. importação-declaração:</span> <span class="item-val" id="r_pend_decl">-</span></div>
     </div>
 
     <div class="section-img">
-        <div class="section-title">Presença e Pagamento (Por AWB)</div>
-        <div class="item-img">Presenças feitas: <span class="item-val" id="r_presenca">-</span></div>
-        <div class="item-img">Envios para pgto: <span class="item-val" id="r_pgto">-</span></div>
-        <div class="item-img">Pendentes Pres./DARF/Envio: <span class="item-val" id="r_pend_darf">-</span></div>
-        <div class="item-img">AWBs pendentes de desembaraço: <span class="item-val" id="r_desemb">-</span></div>
-        <div class="item-img">Pgto. da AWB pendente há mais tempo: <span class="item-val" id="r_hora">-</span></div>
-        <div style="margin-top: 10px; font-size: 13px; color: #666;">Status dos Sistemas:</div>
-        <div class="item-img">- Presença: <span class="item-val" id="r_sys_presenca"></span></div>
-        <div class="item-img">- Geração DARF: <span class="item-val" id="r_sys_darf"></span></div>
-        <div class="item-img">- Pagamento: <span class="item-val" id="r_sys_pgto"></span></div>
-        <div class="item-img">- Desembaraço: <span class="item-val" id="r_sys_desemb"></span></div>
+        <div class="section-title"><svg class="svg-icon"><use href="#icon-money"></use></svg> Presença e Pagamento (Por AWB)</div>
+        <div class="item-img"><span class="item-label">Presenças feitas:</span> <span class="item-val" id="r_presenca">-</span></div>
+        <div class="item-img"><span class="item-label">Envios para pgto:</span> <span class="item-val" id="r_pgto">-</span></div>
+        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Pendentes Pres./DARF/Envio:</span> <span class="item-val" id="r_pend_darf">-</span></div>
+        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> AWBs pendentes de desembaraço:</span> <span class="item-val" id="r_desemb">-</span></div>
+        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Pgto. da AWB pendente há mais tempo:</span> <span class="item-val" id="r_hora">-</span></div>
+        
+        <div style="margin-top: 15px; font-size: 14px; color: #666; font-weight: bold;">Status dos Sistemas:</div>
+        <div class="item-img"><span class="item-label">- Presença:</span> <span class="item-val" id="r_sys_presenca"></span></div>
+        <div class="item-img"><span class="item-label">- Geração DARF:</span> <span class="item-val" id="r_sys_darf"></span></div>
+        <div class="item-img"><span class="item-label">- Pagamento:</span> <span class="item-val" id="r_sys_pgto"></span></div>
+        <div class="item-img"><span class="item-label">- Desembaraço:</span> <span class="item-val" id="r_sys_desemb"></span></div>
     </div>
 
     <div class="section-img">
-        <div class="section-title">ICMS</div>
-        <div class="item-img">GNRE ES: <span class="item-val" id="r_es">-</span></div>
-        <div class="item-img">GNRE PE: <span class="item-val" id="r_pe">-</span></div>
-        <div class="item-img">DARE: <span class="item-val" id="r_dare">-</span></div>
+        <div class="section-title"><svg class="svg-icon"><use href="#icon-icms"></use></svg> ICMS</div>
+        <div class="item-img"><span class="item-label">GNRE ES:</span> <span class="item-val" id="r_es">-</span></div>
+        <div class="item-img"><span class="item-label">GNRE PE:</span> <span class="item-val" id="r_pe">-</span></div>
+        <div class="item-img"><span class="item-label">DARE:</span> <span class="item-val" id="r_dare">-</span></div>
     </div>
 
     <div class="section-img">
-        <div class="section-title">Fiscalização e Devolução</div>
-        <div class="item-img">Mangas/Gaiolas/Paletes pendentes: <span class="item-val" id="r_gaiolas">-</span></div>
-        <div class="item-img">Mangas/Gaiolas/Paletes concluídos: <span class="item-val" id="r_gaiolas_conc">-</span></div>
+        <div class="section-title"><svg class="svg-icon"><use href="#icon-box"></use></svg> Fiscalização e Devolução</div>
+        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Mangas/Gaiolas pendentes:</span> <span class="item-val" id="r_gaiolas">-</span></div>
+        <div class="item-img"><span class="item-label">Mangas/Gaiolas/Paletes concluídos:</span> <span class="item-val" id="r_gaiolas_conc">-</span></div>
+    </div>
+
+    <div class="section-img">
+        <div class="section-title"><svg class="svg-icon"><use href="#icon-obs"></use></svg> Observações Gerais</div>
+        <div class="obs-box" id="r_obs">-</div>
     </div>
 </div>
 
@@ -154,6 +212,12 @@
     function preencherValor(idOrigem, idDestino) {
         let valor = document.getElementById(idOrigem).value;
         let destino = document.getElementById(idDestino);
+        
+        if (idOrigem === 'f_obs') {
+            destino.innerText = valor.trim() ? valor : 'Nenhuma observação registrada.';
+            return;
+        }
+
         destino.innerText = valor ? valor : '0';
         
         if (valor === "Com Problema" || valor === "Sistema com Problema") {
@@ -173,11 +237,11 @@
     }
 
     function processarRelatorio() {
-        // 1. Atualizar a data de geração no topo do relatório oculto
+        // 1. Atualizar a data
         const agora = new Date().toLocaleString('pt-BR');
         document.getElementById('data-img').innerText = "Gerado em: " + agora;
 
-        // 2. Mapear dados para o design final da imagem
+        // 2. Mapear dados
         preencherValor('f_imp', 'r_imp');
         preencherValor('f_manif', 'r_manif');
         preencherValor('f_decl', 'r_decl');
@@ -200,32 +264,35 @@
         preencherValor('f_dare', 'r_dare');
         preencherValor('f_gaiolas', 'r_gaiolas');
         preencherValor('f_gaiolas_conc', 'r_gaiolas_conc');
+        preencherValor('f_obs', 'r_obs');
 
-        // 3. Renderizar a div oculta em um elemento de Imagem/Canvas
-        html2canvas(document.querySelector("#canvasArea"), { scale: 2 }).then(canvas => {
+        // 3. Gerar Imagem com escala melhorada
+        const canvasElement = document.querySelector("#canvasArea");
+        
+        html2canvas(canvasElement, { 
+            scale: 2,           // Mantém a alta qualidade
+            useCORS: true, 
+            backgroundColor: "#ffffff"
+        }).then(canvas => {
             canvas.toBlob(blob => {
                 const nomeArquivo = 'relatorio_passagem_turno.png';
-                
-                // Forçar o download local automático do arquivo para o dispositivo do usuário
                 const urlDownload = URL.createObjectURL(blob);
+                
+                // Forçar download
                 const linkDownload = document.createElement('a');
                 linkDownload.download = nomeArquivo;
                 linkDownload.href = urlDownload;
                 linkDownload.click();
                 URL.revokeObjectURL(urlDownload);
 
-                // Tentar usar o compartilhamento nativo do smartphone (se disponível no navegador mobile)
+                // Compartilhamento Mobile
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], nomeArquivo, { type: blob.type })] })) {
                     const arquivoParaCompartilhar = new File([blob], nomeArquivo, { type: blob.type });
-                    
-                    // Pequena pausa técnica para garantir que o download não interfira no menu nativo
                     setTimeout(() => {
                         navigator.share({
                             files: [arquivoParaCompartilhar],
-                            title: 'Relatório de Passagem de Turno',
-                            text: `Passagem de turno gerada em: ${new Date().toLocaleString('pt-BR')}`
-                        })
-                        .catch(err => console.log("Compartilhamento cancelado ou falhou:", err));
+                            title: 'Relatório de Passagem de Turno'
+                        }).catch(err => console.log("Compartilhamento cancelado:", err));
                     }, 400);
                 }
             }, 'image/png');
