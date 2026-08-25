@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* Estilos base */
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
+        body { font-family: Arial, Helvetica, sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
         
         /* Estilos do Formulário (UI) */
         .form-container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
@@ -16,54 +16,61 @@
         label { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: bold; color: #555; margin-top: 12px; }
         
         /* Destaque para labels de pendências no formulário */
-        .label-alerta { color: #d9534f; font-weight: 800; }
+        .label-alerta { color: #d9534f; font-weight: bold; }
 
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: #fff; font-family: 'Segoe UI', Arial, sans-serif; }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: #fff; font-family: Arial, Helvetica, sans-serif; }
         textarea { resize: vertical; min-height: 80px; }
         
+        /* Botão Container */
         .btn-container { position: sticky; bottom: 0; background: white; padding: 10px 0; margin-top: 30px; border-top: 1px solid #eee; }
-        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3); }
+        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3); transition: background 0.3s; }
         button:active { background: #0056b3; }
         
-        /* Ícones SVG para padronização (Sem depender do OS) */
-        .svg-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        .svg-alert { width: 18px; height: 18px; stroke: #d9534f; flex-shrink: 0; }
+        /* Ícones SVG */
+        .svg-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+        .svg-alert { width: 18px; height: 18px; stroke: #d9534f; }
         
+        /* Estilo Checkbox Status Sistema */
+        .status-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px;}
+        .status-row label { margin-top: 0; }
+        .status-checkbox { display: none; }
+        .status-label { display: inline-flex; align-items: center; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-weight: bold; user-select: none; font-size: 14px; border: 2px solid transparent; }
+        .status-checkbox:checked + .status-label { background: #e9f7ef; color: #155724; border-color: #28a745; }
+        .status-checkbox:not(:checked) + .status-label { background: #f8d7da; color: #721c24; border-color: #dc3545; }
+        .status-checkbox:checked + .status-label::before { content: '✔ OK'; }
+        .status-checkbox:not(:checked) + .status-label::before { content: '✖ Problema'; }
+
         /* Estilos da Imagem Gerada (Renderizada com TAMANHO FIXO de 650px) */
         #canvasArea { 
             position: absolute; left: -9999px; top: 0; 
-            width: 650px; /* Largura fixa para padronizar PC e Mobile */
+            width: 650px; 
             padding: 40px; 
             background: #ffffff; border-radius: 10px; border-top: 10px solid #007bff;
-            box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif;
+            box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; 
         }
         
-        .header-img { text-align: center; color: #333; font-size: 26px; font-weight: bold; margin-bottom: 5px; }
+        .header-img { text-align: center; color: #333; font-size: 26px; font-weight: bold; margin-bottom: 5px; line-height: 1.2; }
         .date-img { text-align: center; font-size: 14px; color: #888; margin-bottom: 25px; }
         
         .section-img { margin-bottom: 20px; }
         .section-title { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: bold; color: #007bff; border-bottom: 2px solid #f0f0f0; padding-bottom: 6px; margin-bottom: 12px; }
         
-        /* Layout flexível para alinhar perfeitamente os textos */
-        .item-img { font-size: 15px; color: #444; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; padding: 2px 0;}
-        .item-label { display: flex; align-items: center; gap: 6px; flex: 1; padding-right: 15px; }
-        
-        /* Destaque para itens pendentes no relatório gerado */
-        .item-destaque { 
-            background-color: #fff4f4; 
-            border-left: 5px solid #d9534f; 
-            padding: 8px 10px; 
-            border-radius: 4px; 
-            margin: 8px 0; 
-            display: flex; justify-content: space-between; align-items: center; 
-            font-size: 15px; font-weight: bold; color: #a94442;
+        /* Layout flexível PADRÃO sem fundo, garantindo alinhamento total */
+        .item-img { 
+            font-size: 15px; 
+            color: #444; 
+            padding: 4px 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
         }
-        .item-destaque .item-label { flex: 1; padding-right: 15px; }
-        .item-destaque .item-val { color: #d9534f; font-size: 16px; }
-
-        .item-val { font-weight: bold; color: #111; text-align: right; white-space: nowrap; flex-shrink: 0; }
-        .status-alert { color: #d9534f; }
         
+        .item-label { display: flex; align-items: center; gap: 6px; flex: 1; padding-right: 15px; }
+        .item-val { font-weight: bold; color: #111; text-align: right; white-space: nowrap; flex-shrink: 0; }
+        
+        /* Destaque Modificado: Muda APENAS a cor da letra. Mantém o alinhamento 100% igual aos outros */
+        .text-alert, .text-alert .item-label, .text-alert .item-val { color: #d9534f !important; font-weight: bold; }
+
         /* Caixa de observações na imagem */
         .obs-box { background: #f9f9f9; border: 1px dashed #ccc; padding: 15px; border-radius: 8px; font-size: 15px; color: #444; white-space: pre-wrap; word-break: break-word; min-height: 50px; margin-top: 10px; line-height: 1.5;}
     </style>
@@ -76,8 +83,9 @@
     <symbol id="icon-money" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></symbol>
     <symbol id="icon-icms" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></symbol>
     <symbol id="icon-box" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></symbol>
+    <symbol id="icon-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></symbol>
+    <symbol id="icon-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></symbol>
     <symbol id="icon-obs" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></symbol>
-    <symbol id="icon-alert" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></symbol>
 </svg>
 
 <div class="form-container">
@@ -87,41 +95,43 @@
     <label>Qtd de AWBs importadas:</label> <input type="number" id="f_imp" placeholder="Qtd de AWBs">
     <label>Qtd de AWBs manifestadas:</label> <input type="number" id="f_manif" placeholder="Qtd de AWBs">
     <label>Qtd de AWBs declaradas:</label> <input type="number" id="f_decl" placeholder="Qtd de AWBs">
-    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> AWBs pendentes de troca de regime:</label> <input type="text" id="f_regime" placeholder="Qtd de AWBs">
-    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> AWBs pend. importação-declaração:</label> <input type="number" id="f_pend_decl" placeholder="Qtd de AWBs">
+    <label class="label-alerta">AWBs pendentes de troca de regime:</label> <input type="text" id="f_regime" placeholder="Qtd de AWBs">
+    <label class="label-alerta">AWBs pend. importação-declaração:</label> <input type="number" id="f_pend_decl" placeholder="Qtd de AWBs">
 
-    <h3><svg class="svg-icon"><use href="#icon-money"></use></svg> Presença e Pagamento de DARF</h3>
+    <h3><svg class="svg-icon"><use href="#icon-money"></use></svg> Presença e Pagamento</h3>
     <label>Qtd de presenças feitas:</label> <input type="number" id="f_presenca" placeholder="Qtd de AWBs">
-    <label>Qtd de envios para pagamento realizados:</label> <input type="number" id="f_pgto" placeholder="Qtd de AWBs">
-    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Pendentes (Presença/DARF/Envio):</label> <input type="number" id="f_pend_darf" placeholder="Qtd de AWBs">
-    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> AWBs pendentes de desembaraço:</label> <input type="number" id="f_desemb" placeholder="Qtd de AWBs">
+    <label>Qtd de envios para pgto realizados:</label> <input type="number" id="f_pgto" placeholder="Qtd de AWBs">
+    <label class="label-alerta">Pendentes (Presença/DARF/Envio):</label> <input type="number" id="f_pend_darf" placeholder="Qtd de AWBs">
+    <label class="label-alerta">AWBs pendentes de desembaraço:</label> <input type="number" id="f_desemb" placeholder="Qtd de AWBs">
     
-    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Hora de PG. da AWB pendente há mais tempo:</label> 
+    <label class="label-alerta">AWB pend. de desemb. mais antiga:</label> 
     <input type="datetime-local" id="f_hora">
 
-    <label>Status do Sistema - Presença:</label>
-    <select id="f_sys_presenca">
-        <option value="Normal">Normal</option>
-        <option value="Com Problema">Com Problema</option>
-    </select>
-    
-    <label>Status do Sistema - Geração de DARF:</label>
-    <select id="f_sys_darf">
-        <option value="Normal">Normal</option>
-        <option value="Com Problema">Com Problema</option>
-    </select>
-
-    <label>Status do Sistema - Pagamento:</label>
-    <select id="f_sys_pgto">
-        <option value="Normal">Normal</option>
-        <option value="Com Problema">Com Problema</option>
-    </select>
-
-    <label>Status do Sistema - Desembaraço:</label>
-    <select id="f_sys_desemb">
-        <option value="Normal">Normal</option>
-        <option value="Com Problema">Com Problema</option>
-    </select>
+    <h3>Status dos Sistemas</h3>
+    <div class="status-row">
+        <label>Manifesto:</label>
+        <div><input type="checkbox" id="f_sys_manif" class="status-checkbox" checked><label for="f_sys_manif" class="status-label"></label></div>
+    </div>
+    <div class="status-row">
+        <label>Declaração:</label>
+        <div><input type="checkbox" id="f_sys_decl" class="status-checkbox" checked><label for="f_sys_decl" class="status-label"></label></div>
+    </div>
+    <div class="status-row">
+        <label>Presença:</label>
+        <div><input type="checkbox" id="f_sys_presenca" class="status-checkbox" checked><label for="f_sys_presenca" class="status-label"></label></div>
+    </div>
+    <div class="status-row">
+        <label>Geração de DARF:</label>
+        <div><input type="checkbox" id="f_sys_darf" class="status-checkbox" checked><label for="f_sys_darf" class="status-label"></label></div>
+    </div>
+    <div class="status-row">
+        <label>Pagamento:</label>
+        <div><input type="checkbox" id="f_sys_pgto" class="status-checkbox" checked><label for="f_sys_pgto" class="status-label"></label></div>
+    </div>
+    <div class="status-row">
+        <label>Desembaraço:</label>
+        <div><input type="checkbox" id="f_sys_desemb" class="status-checkbox" checked><label for="f_sys_desemb" class="status-label"></label></div>
+    </div>
 
     <h3><svg class="svg-icon"><use href="#icon-icms"></use></svg> ICMS (Status)</h3>
     <label>GNRE ES:</label>
@@ -146,15 +156,33 @@
     </select>
 
     <h3><svg class="svg-icon"><use href="#icon-box"></use></svg> Fiscalização e Devolução</h3>
-    <label class="label-alerta"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Mangas/Gaiolas/Paletes pendentes:</label> <input type="number" id="f_gaiolas" placeholder="Qtd pendente">
+    <label class="label-alerta">Mangas/Gaiolas/Paletes pendentes:</label> <input type="number" id="f_gaiolas" placeholder="Qtd pendente">
     <label>Mangas/Gaiolas/Paletes concluídos:</label> <input type="number" id="f_gaiolas_conc" placeholder="Qtd concluída">
+
+    <!-- SEÇÃO DE INVENTÁRIO -->
+    <div>
+        <h3 style="margin-top: 25px;"><svg class="svg-icon"><use href="#icon-db"></use></svg> Inventário</h3>
+        <label>Quantidade de pacotes em fiscalização:</label> <input type="number" id="f_inv_fisc" placeholder="Qtd em fiscalização" oninput="calcularInventario()">
+        <label>Quantidade de pacotes em devolução:</label> <input type="number" id="f_inv_dev" placeholder="Qtd em devolução" oninput="calcularInventario()">
+        <label>Quantidade de pacotes liberados/desembaraçados:</label> <input type="number" id="f_inv_lib" placeholder="Qtd liberados" oninput="calcularInventario()">
+        <label>Quantidade de pacotes em outros status:</label> <input type="number" id="f_inv_outros" placeholder="Qtd em outros status" oninput="calcularInventario()">
+        
+        <!-- Campo Total Calculado Automático -->
+        <label style="color: #007bff;">Qtd total de remessas no inventário (Automático):</label> 
+        <input type="number" id="f_inv_total" placeholder="0" readonly style="background-color: #f8f9fa; font-weight: bold; color: #007bff;">
+    </div>
+
+    <h3><svg class="svg-icon"><use href="#icon-send"></use></svg> Exportação</h3>
+    <label>Lote atual de devolução:</label> <input type="text" id="f_exp_lote" placeholder="Ex: LOTE-012">
+    <label>Qtd total de remessas no lote:</label> <input type="number" id="f_exp_remessas" placeholder="Qtd de remessas">
+    <label>Qtd total de paletes no atual lote:</label> <input type="number" id="f_exp_paletes" placeholder="Qtd de paletes">
     
     <h3><svg class="svg-icon"><use href="#icon-obs"></use></svg> Observações Gerais</h3>
     <label>Anotações do turno (Opcional):</label>
     <textarea id="f_obs" placeholder="Informe aqui qualquer ocorrência, aviso ou detalhe relevante..."></textarea>
 
     <div class="btn-container">
-        <button onclick="processarRelatorio()">Baixar e Compartilhar Relatório</button>
+        <button id="btn-gerar" onclick="processarRelatorio()">Baixar e Compartilhar Relatório</button>
     </div>
 </div>
 
@@ -170,19 +198,23 @@
         <div class="item-img"><span class="item-label">Qtd de AWBs importadas:</span> <span class="item-val" id="r_imp">-</span></div>
         <div class="item-img"><span class="item-label">Qtd de AWBs manifestadas:</span> <span class="item-val" id="r_manif">-</span></div>
         <div class="item-img"><span class="item-label">Qtd de AWBs declaradas:</span> <span class="item-val" id="r_decl">-</span></div>
-        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Troca de regime:</span> <span class="item-val" id="r_regime">-</span></div>
-        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> AWBs pend. importação-declaração:</span> <span class="item-val" id="r_pend_decl">-</span></div>
+        
+        <div class="item-img text-alert"><span class="item-label">Troca de regime:</span> <span class="item-val" id="r_regime">-</span></div>
+        <div class="item-img text-alert"><span class="item-label">AWBs pend. importação-declaração:</span> <span class="item-val" id="r_pend_decl">-</span></div>
     </div>
 
     <div class="section-img">
         <div class="section-title"><svg class="svg-icon"><use href="#icon-money"></use></svg> Presença e Pagamento (Por AWB)</div>
         <div class="item-img"><span class="item-label">Presenças feitas:</span> <span class="item-val" id="r_presenca">-</span></div>
         <div class="item-img"><span class="item-label">Envios para pgto:</span> <span class="item-val" id="r_pgto">-</span></div>
-        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Pendentes Pres./DARF/Envio:</span> <span class="item-val" id="r_pend_darf">-</span></div>
-        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> AWBs pendentes de desembaraço:</span> <span class="item-val" id="r_desemb">-</span></div>
-        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Pgto. da AWB pendente há mais tempo:</span> <span class="item-val" id="r_hora">-</span></div>
         
-        <div style="margin-top: 15px; font-size: 14px; color: #666; font-weight: bold;">Status dos Sistemas:</div>
+        <div class="item-img text-alert"><span class="item-label">Pendentes Pres./DARF/Envio:</span> <span class="item-val" id="r_pend_darf">-</span></div>
+        <div class="item-img text-alert"><span class="item-label">AWBs pendentes de desembaraço:</span> <span class="item-val" id="r_desemb">-</span></div>
+        <div class="item-img text-alert"><span class="item-label">AWB pend. de desemb. mais antiga:</span> <span class="item-val" id="r_hora">-</span></div>
+        
+        <div style="margin-top: 15px; font-size: 14px; color: #666; font-weight: bold; padding-left: 8px;">Status dos Sistemas:</div>
+        <div class="item-img"><span class="item-label">- Manifesto:</span> <span class="item-val" id="r_sys_manif"></span></div>
+        <div class="item-img"><span class="item-label">- Declaração:</span> <span class="item-val" id="r_sys_decl"></span></div>
         <div class="item-img"><span class="item-label">- Presença:</span> <span class="item-val" id="r_sys_presenca"></span></div>
         <div class="item-img"><span class="item-label">- Geração DARF:</span> <span class="item-val" id="r_sys_darf"></span></div>
         <div class="item-img"><span class="item-label">- Pagamento:</span> <span class="item-val" id="r_sys_pgto"></span></div>
@@ -198,8 +230,24 @@
 
     <div class="section-img">
         <div class="section-title"><svg class="svg-icon"><use href="#icon-box"></use></svg> Fiscalização e Devolução</div>
-        <div class="item-destaque"><span class="item-label"><svg class="svg-icon svg-alert"><use href="#icon-alert"></use></svg> Mangas/Gaiolas pendentes:</span> <span class="item-val" id="r_gaiolas">-</span></div>
+        <div class="item-img text-alert"><span class="item-label">Mangas/Gaiolas pendentes:</span> <span class="item-val" id="r_gaiolas">-</span></div>
         <div class="item-img"><span class="item-label">Mangas/Gaiolas/Paletes concluídos:</span> <span class="item-val" id="r_gaiolas_conc">-</span></div>
+    </div>
+
+    <div class="section-img">
+        <div class="section-title"><svg class="svg-icon"><use href="#icon-db"></use></svg> Inventário</div>
+        <div class="item-img"><span class="item-label">Total de remessas no inventário:</span> <span class="item-val" id="r_inv_total">-</span></div>
+        <div class="item-img"><span class="item-label">Pacotes em fiscalização:</span> <span class="item-val" id="r_inv_fisc">-</span></div>
+        <div class="item-img"><span class="item-label">Pacotes em devolução:</span> <span class="item-val" id="r_inv_dev">-</span></div>
+        <div class="item-img"><span class="item-label">Pacotes liberados/desembaraçados:</span> <span class="item-val" id="r_inv_lib">-</span></div>
+        <div class="item-img"><span class="item-label">Pacotes em outros status:</span> <span class="item-val" id="r_inv_outros">-</span></div>
+    </div>
+
+    <div class="section-img">
+        <div class="section-title"><svg class="svg-icon"><use href="#icon-send"></use></svg> Exportação</div>
+        <div class="item-img"><span class="item-label">Lote atual de devolução:</span> <span class="item-val" id="r_exp_lote">-</span></div>
+        <div class="item-img"><span class="item-label">Total de remessas no lote:</span> <span class="item-val" id="r_exp_remessas">-</span></div>
+        <div class="item-img"><span class="item-label">Total de paletes no atual lote:</span> <span class="item-val" id="r_exp_paletes">-</span></div>
     </div>
 
     <div class="section-img">
@@ -209,21 +257,55 @@
 </div>
 
 <script>
+    // Calculadora Automática do Inventário
+    function calcularInventario() {
+        let vFisc = parseInt(document.getElementById('f_inv_fisc').value) || 0;
+        let vDev = parseInt(document.getElementById('f_inv_dev').value) || 0;
+        let vLib = parseInt(document.getElementById('f_inv_lib').value) || 0;
+        let vOutros = parseInt(document.getElementById('f_inv_outros').value) || 0;
+
+        let somaStatus = vFisc + vDev + vLib + vOutros;
+        
+        // Atualiza visualmente no input de leitura
+        document.getElementById('f_inv_total').value = somaStatus;
+    }
+
     function preencherValor(idOrigem, idDestino) {
-        let valor = document.getElementById(idOrigem).value;
+        let elementoOrigem = document.getElementById(idOrigem);
         let destino = document.getElementById(idDestino);
+        
+        if (!elementoOrigem || !destino) return;
+        
+        let valor = elementoOrigem.value;
         
         if (idOrigem === 'f_obs') {
             destino.innerText = valor.trim() ? valor : 'Nenhuma observação registrada.';
             return;
         }
-
-        destino.innerText = valor ? valor : '0';
         
-        if (valor === "Com Problema" || valor === "Sistema com Problema") {
-            destino.classList.add("status-alert");
+        if (elementoOrigem.type === "text" && !valor) {
+            destino.innerText = '-';
         } else {
-            destino.classList.remove("status-alert");
+            destino.innerText = valor ? valor : '0';
+        }
+        
+        if (valor === "Sistema com Problema" || valor === "Não Gerado") {
+            destino.style.color = "#d9534f"; // Vermelho
+        } else {
+            destino.style.color = ""; // Reseta a cor para campos de texto normais
+        }
+    }
+
+    function preencherStatusCheckbox(idCheckbox, idDestino) {
+        let chk = document.getElementById(idCheckbox);
+        let destino = document.getElementById(idDestino);
+        
+        if (chk.checked) {
+            destino.innerText = "✔ OK";
+            destino.style.color = "#28a745"; // Verde Sucesso
+        } else {
+            destino.innerText = "✖ Problema";
+            destino.style.color = "#dc3545"; // Vermelho Alerta
         }
     }
 
@@ -237,11 +319,13 @@
     }
 
     function processarRelatorio() {
-        // 1. Atualizar a data
+        // Garante que o inventário calcule e envie certo, mesmo que o user não digite nada
+        calcularInventario();
+
         const agora = new Date().toLocaleString('pt-BR');
         document.getElementById('data-img').innerText = "Gerado em: " + agora;
 
-        // 2. Mapear dados
+        // Mapear dados
         preencherValor('f_imp', 'r_imp');
         preencherValor('f_manif', 'r_manif');
         preencherValor('f_decl', 'r_decl');
@@ -255,37 +339,56 @@
         let inputHora = document.getElementById('f_hora').value;
         document.getElementById('r_hora').innerText = formatarDataHora(inputHora);
 
-        preencherValor('f_sys_presenca', 'r_sys_presenca');
-        preencherValor('f_sys_darf', 'r_sys_darf');
-        preencherValor('f_sys_pgto', 'r_sys_pgto');
-        preencherValor('f_sys_desemb', 'r_sys_desemb');
+        // Status dos Sistemas (usando Checkbox customizados)
+        preencherStatusCheckbox('f_sys_manif', 'r_sys_manif');
+        preencherStatusCheckbox('f_sys_decl', 'r_sys_decl');
+        preencherStatusCheckbox('f_sys_presenca', 'r_sys_presenca');
+        preencherStatusCheckbox('f_sys_darf', 'r_sys_darf');
+        preencherStatusCheckbox('f_sys_pgto', 'r_sys_pgto');
+        preencherStatusCheckbox('f_sys_desemb', 'r_sys_desemb');
+        
+        // ICMS
         preencherValor('f_es', 'r_es');
         preencherValor('f_pe', 'r_pe');
         preencherValor('f_dare', 'r_dare');
+        
+        // Fiscalização
         preencherValor('f_gaiolas', 'r_gaiolas');
         preencherValor('f_gaiolas_conc', 'r_gaiolas_conc');
+        
+        // Inventário
+        preencherValor('f_inv_total', 'r_inv_total');
+        preencherValor('f_inv_fisc', 'r_inv_fisc');
+        preencherValor('f_inv_dev', 'r_inv_dev');
+        preencherValor('f_inv_lib', 'r_inv_lib');
+        preencherValor('f_inv_outros', 'r_inv_outros');
+
+        // Exportação
+        preencherValor('f_exp_lote', 'r_exp_lote');
+        preencherValor('f_exp_remessas', 'r_exp_remessas');
+        preencherValor('f_exp_paletes', 'r_exp_paletes');
+
         preencherValor('f_obs', 'r_obs');
 
-        // 3. Gerar Imagem com escala melhorada
+        // Gerar Imagem 
         const canvasElement = document.querySelector("#canvasArea");
         
         html2canvas(canvasElement, { 
-            scale: 2,           // Mantém a alta qualidade
+            scale: 2,          
             useCORS: true, 
-            backgroundColor: "#ffffff"
+            backgroundColor: "#ffffff",
+            logging: false
         }).then(canvas => {
             canvas.toBlob(blob => {
                 const nomeArquivo = 'relatorio_passagem_turno.png';
                 const urlDownload = URL.createObjectURL(blob);
                 
-                // Forçar download
                 const linkDownload = document.createElement('a');
                 linkDownload.download = nomeArquivo;
                 linkDownload.href = urlDownload;
                 linkDownload.click();
                 URL.revokeObjectURL(urlDownload);
 
-                // Compartilhamento Mobile
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], nomeArquivo, { type: blob.type })] })) {
                     const arquivoParaCompartilhar = new File([blob], nomeArquivo, { type: blob.type });
                     setTimeout(() => {
