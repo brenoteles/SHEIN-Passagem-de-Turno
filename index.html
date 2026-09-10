@@ -1,406 +1,714 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Turno</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        /* Estilos base */
-        body { font-family: Arial, Helvetica, sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
-        
-        /* Estilos do Formulário (UI) */
-        .form-container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
-        h2 { text-align: center; color: #333; font-size: 22px; margin-top: 10px; }
-        h3 { font-size: 16px; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 25px; display: flex; align-items: center; gap: 8px;}
-        label { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: bold; color: #555; margin-top: 12px; }
-        
-        /* Destaque para labels de pendências no formulário */
-        .label-alerta { color: #d9534f; font-weight: bold; }
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   
+   <!-- Evita o armazenamento em cache da página -->
+   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+   <meta http-equiv="Pragma" content="no-cache">
+   <meta http-equiv="Expires" content="0">
+   
+   <title>Relatório Operacional de Turno</title>
+   
+   <!-- Importação das fontes idênticas para todos os sistemas (Força a mesma tipografia e emojis) -->
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+   
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+   <style>
+       /* Estilos do Formulário (Mobile-First) */
+       body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
+       .form-container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+       h2 { text-align: center; color: #333; font-size: 22px; margin-top: 10px; }
+       h3 { font-size: 16px; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 25px; }
+       label { display: block; font-size: 14px; font-weight: bold; color: #555; margin-top: 12px; }
+       input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: #fff; }
+       textarea { resize: vertical; }
+       
+       .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+       .checkbox-group label { margin-top: 0; font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+       .checkbox-group input { width: auto; margin: 0; }
 
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: #fff; font-family: Arial, Helvetica, sans-serif; }
-        textarea { resize: vertical; min-height: 80px; }
-        
-        /* Botão Container */
-        .btn-container { position: sticky; bottom: 0; background: white; padding: 10px 0; margin-top: 30px; border-top: 1px solid #eee; }
-        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3); transition: background 0.3s; }
-        button:active { background: #0056b3; }
-        
-        /* Ícones SVG */
-        .svg-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-        .svg-alert { width: 18px; height: 18px; stroke: #d9534f; }
-        
-        /* Estilo Checkbox Status Sistema */
-        .status-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px;}
-        .status-row label { margin-top: 0; }
-        .status-checkbox { display: none; }
-        .status-label { display: inline-flex; align-items: center; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-weight: bold; user-select: none; font-size: 14px; border: 2px solid transparent; }
-        .status-checkbox:checked + .status-label { background: #e9f7ef; color: #155724; border-color: #28a745; }
-        .status-checkbox:not(:checked) + .status-label { background: #f8d7da; color: #721c24; border-color: #dc3545; }
-        .status-checkbox:checked + .status-label::before { content: '✔ OK'; }
-        .status-checkbox:not(:checked) + .status-label::before { content: '✖ Problema'; }
+       .hidden-field { display: none; padding-left: 10px; border-left: 3px solid #007bff; margin-top: 10px; }
+       .dynamic-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
 
-        /* Estilos da Imagem Gerada (Renderizada com TAMANHO FIXO de 650px) */
-        #canvasArea { 
-            position: absolute; left: -9999px; top: 0; 
-            width: 650px; 
-            padding: 40px; 
-            background: #ffffff; border-radius: 10px; border-top: 10px solid #007bff;
-            box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; 
-        }
-        
-        .header-img { text-align: center; color: #333; font-size: 26px; font-weight: bold; margin-bottom: 5px; line-height: 1.2; }
-        .date-img { text-align: center; font-size: 14px; color: #888; margin-bottom: 25px; }
-        
-        .section-img { margin-bottom: 20px; }
-        .section-title { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: bold; color: #007bff; border-bottom: 2px solid #f0f0f0; padding-bottom: 6px; margin-bottom: 12px; }
-        
-        /* Layout flexível PADRÃO sem fundo, garantindo alinhamento total */
-        .item-img { 
-            font-size: 15px; 
-            color: #444; 
-            padding: 4px 8px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-        }
-        
-        .item-label { display: flex; align-items: center; gap: 6px; flex: 1; padding-right: 15px; }
-        .item-val { font-weight: bold; color: #111; text-align: right; white-space: nowrap; flex-shrink: 0; }
-        
-        /* Destaque Modificado: Muda APENAS a cor da letra. Mantém o alinhamento 100% igual aos outros */
-        .text-alert, .text-alert .item-label, .text-alert .item-val { color: #d9534f !important; font-weight: bold; }
+       .btn-container { position: sticky; bottom: 0; background: white; padding: 10px 0; margin-top: 30px; border-top: 1px solid #eee; }
+       button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3); }
+       button:active { background: #0056b3; }
+       
+       .total-display { font-size: 16px; font-weight: bold; color: #28a745; margin-top: 10px; text-align: right; }
 
-        /* Caixa de observações na imagem */
-        .obs-box { background: #f9f9f9; border: 1px dashed #ccc; padding: 15px; border-radius: 8px; font-size: 15px; color: #444; white-space: pre-wrap; word-break: break-word; min-height: 50px; margin-top: 10px; line-height: 1.5;}
-    </style>
+       /* Correção para Mobile: Usando um wrapper isolado para o print */
+       #canvasWrapper {
+           position: absolute;
+           top: 0;
+           left: 0;
+           z-index: -100;
+           visibility: hidden;
+           pointer-events: none;
+           width: 0;
+           height: 0;
+           overflow: hidden;
+       }
+
+       /* Estilos da Imagem Gerada */
+       /* Força a mesma fonte, emojis e proíbe reescala de texto pelo mobile */
+       #canvasArea {
+           width: 580px;
+           padding: 30px;
+           background: #ffffff;
+           border-radius: 10px;
+           border-top: 8px solid #007bff;
+           box-shadow: 0 0 10px rgba(0,0,0,0.05);
+           font-family: 'Inter', 'Noto Color Emoji', sans-serif !important;
+           -webkit-text-size-adjust: 100%; /* Resolve bug de fonte gigante em iOS/Android */
+           text-size-adjust: 100%;
+           visibility: visible; /* Garante que o canvas veja o conteúdo */
+       }
+       
+       .header-img { text-align: center; color: #333; font-size: 20px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase;}
+       .date-img { text-align: center; font-size: 12px; color: #888; margin-bottom: 20px; }
+       .section-img { margin-bottom: 15px; }
+       .section-title { font-size: 15px; font-weight: bold; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; text-transform: uppercase; }
+       .item-img { font-size: 13px; color: #444; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+       .item-val { font-weight: bold; color: #111; text-align: right; word-break: break-word;}
+       .status-alert { color: #d9534f; font-weight: bold;}
+       .status-warn { color: #d39e00; font-weight: bold;}
+       .status-success { color: #28a745; font-weight: bold; }
+       .truck-list-img { display: flex; flex-direction: column; width: 100%; margin-top: 5px; padding-left: 10px; border-left: 2px solid #ddd; }
+       
+       /* Ajuste para o Raio-X ficar forçadamente em uma linha única */
+       .rx-line-container { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: space-between; width: 100%; }
+       .rx-grid-report { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 8px; align-items: center; }
+       .rx-item { display: inline-flex; align-items: center; gap: 2px; font-weight: bold; font-size: 11px; white-space: nowrap; }
+
+       .insumos-group { display: flex; gap: 10px; }
+       .insumos-group input { width: 50%; }
+       .insumos-title { color: #555; margin-top: 20px; margin-bottom: 5px; font-size: 15px; border-bottom: 1px solid #ddd; padding-bottom: 4px; font-weight: bold; }
+   </style>
+   
+   <!-- Script para garantir recarregamento caso venha de cache do botão voltar -->
+   <script>
+       window.addEventListener("pageshow", function (event) {
+           if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+               window.location.reload(true);
+           }
+       });
+   </script>
 </head>
 <body>
 
-<!-- Ícones SVG Reutilizáveis -->
-<svg style="display: none;">
-    <symbol id="icon-decl" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></symbol>
-    <symbol id="icon-money" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></symbol>
-    <symbol id="icon-icms" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></symbol>
-    <symbol id="icon-box" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></symbol>
-    <symbol id="icon-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></symbol>
-    <symbol id="icon-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></symbol>
-    <symbol id="icon-obs" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></symbol>
-</svg>
-
 <div class="form-container">
-    <h2>Passagem de Turno</h2>
-    
-    <h3><svg class="svg-icon"><use href="#icon-decl"></use></svg> Declaração</h3>
-    <label>Qtd de AWBs importadas:</label> <input type="number" id="f_imp" placeholder="Qtd de AWBs">
-    <label>Qtd de AWBs manifestadas:</label> <input type="number" id="f_manif" placeholder="Qtd de AWBs">
-    <label>Qtd de AWBs declaradas:</label> <input type="number" id="f_decl" placeholder="Qtd de AWBs">
-    <label class="label-alerta">AWBs pendentes de troca de regime:</label> <input type="text" id="f_regime" placeholder="Qtd de AWBs">
-    <label class="label-alerta">AWBs pend. importação-declaração:</label> <input type="number" id="f_pend_decl" placeholder="Qtd de AWBs">
+   <h2>Passagem de Turno Operacional</h2>
+   
+   <label>Selecione o Turno:</label>
+   <select id="f_turno">
+       <option value="Turno 1">Turno 1</option>
+       <option value="Turno 2">Turno 2</option>
+       <option value="Turno 3">Turno 3</option>
+   </select>
 
-    <h3><svg class="svg-icon"><use href="#icon-money"></use></svg> Presença e Pagamento</h3>
-    <label>Qtd de presenças feitas:</label> <input type="number" id="f_presenca" placeholder="Qtd de AWBs">
-    <label>Qtd de envios para pgto realizados:</label> <input type="number" id="f_pgto" placeholder="Qtd de AWBs">
-    <label class="label-alerta">Pendentes (Presença/DARF/Envio):</label> <input type="number" id="f_pend_darf" placeholder="Qtd de AWBs">
-    <label class="label-alerta">AWBs pendentes de desembaraço:</label> <input type="number" id="f_desemb" placeholder="Qtd de AWBs">
-    
-    <label class="label-alerta">AWB pend. de desemb. mais antiga:</label> 
-    <input type="datetime-local" id="f_hora">
+   <h3>⏱️ Operações</h3>
+   <label>Início da Operação:</label> <input type="datetime-local" id="f_hr_inicio">
+   <label>Término da Operação:</label> <input type="datetime-local" id="f_hr_fim">
 
-    <h3>Status dos Sistemas</h3>
-    <div class="status-row">
-        <label>Manifesto:</label>
-        <div><input type="checkbox" id="f_sys_manif" class="status-checkbox" checked><label for="f_sys_manif" class="status-label"></label></div>
-    </div>
-    <div class="status-row">
-        <label>Declaração:</label>
-        <div><input type="checkbox" id="f_sys_decl" class="status-checkbox" checked><label for="f_sys_decl" class="status-label"></label></div>
-    </div>
-    <div class="status-row">
-        <label>Presença:</label>
-        <div><input type="checkbox" id="f_sys_presenca" class="status-checkbox" checked><label for="f_sys_presenca" class="status-label"></label></div>
-    </div>
-    <div class="status-row">
-        <label>Geração de DARF:</label>
-        <div><input type="checkbox" id="f_sys_darf" class="status-checkbox" checked><label for="f_sys_darf" class="status-label"></label></div>
-    </div>
-    <div class="status-row">
-        <label>Pagamento:</label>
-        <div><input type="checkbox" id="f_sys_pgto" class="status-checkbox" checked><label for="f_sys_pgto" class="status-label"></label></div>
-    </div>
-    <div class="status-row">
-        <label>Desembaraço:</label>
-        <div><input type="checkbox" id="f_sys_desemb" class="status-checkbox" checked><label for="f_sys_desemb" class="status-label"></label></div>
-    </div>
+   <h3>📥 Recebimento</h3>
+   <label>Qtd de equipamentos na pista:</label> <input type="number" id="f_equip_pista" placeholder="Ex: 5">
+   <label>Qtd de equipamentos na importação:</label> <input type="number" id="f_equip_importacao" placeholder="Ex: 10">
+   <label>Qtd de equipamentos recebidos (Total):</label> <input type="number" id="f_equip_recebidos" placeholder="Ex: 15">
+   
+   <label>Qtd de equipamentos despaletizados:</label> <input type="number" id="f_equip_despaletizados" placeholder="Ex: 10">
+   <label>Qtd de equipamentos dentro do armazem:</label> <input type="number" id="f_equip_armazem" placeholder="Ex: 25">
+   
+   <label>AWBs em seleção?</label>
+   <select id="f_awb_sel" onchange="toggleVisibilidade('f_awb_sel', 'box_awb_sel', 'Sim')">
+       <option value="Não">Não</option>
+       <option value="Sim">Sim</option>
+   </select>
+   <div id="box_awb_sel" class="hidden-field">
+       <input type="number" id="f_awb_sel_qtd" placeholder="Quantidade de AWBs">
+       <textarea id="f_awb_sel_num" rows="3" placeholder="Insira os números (uma AWB por linha)"></textarea>
+   </div>
 
-    <h3><svg class="svg-icon"><use href="#icon-icms"></use></svg> ICMS (Status)</h3>
-    <label>GNRE ES:</label>
-    <select id="f_es">
-        <option value="Gerado">Gerado</option>
-        <option value="Não Gerado">Não Gerado</option>
-        <option value="Sistema com Problema">Sistema com Problema</option>
-    </select>
+   <label>AWBs com problemas ou incompletas no recebimento?</label>
+   <select id="f_awb_prob" onchange="toggleVisibilidade('f_awb_prob', 'box_awb_prob', 'Sim')">
+       <option value="Não">Não</option>
+       <option value="Sim">Sim</option>
+   </select>
+   <div id="box_awb_prob" class="hidden-field">
+       <input type="number" id="f_awb_prob_qtd" placeholder="Quantidade">
+       <textarea id="f_awb_prob_num" rows="3" placeholder="Insira os números ou descrições (uma por linha)"></textarea>
+   </div>
 
-    <label>GNRE PE:</label>
-    <select id="f_pe">
-        <option value="Gerado">Gerado</option>
-        <option value="Não Gerado">Não Gerado</option>
-        <option value="Sistema com Problema">Sistema com Problema</option>
-    </select>
+   <label>Status da Companhia de Handling:</label>
+   <select id="f_handling_status" onchange="toggleVisibilidade('f_handling_status', 'box_handling_prob', 'Com Problemas')">
+       <option value="Operação Normal">Operação Normal</option>
+       <option value="Com Problemas">Com Problemas</option>
+   </select>
+   <div id="box_handling_prob" class="hidden-field">
+       <textarea id="f_handling_detalhe" rows="3" placeholder="Descreva os problemas de handling..."></textarea>
+   </div>
 
-    <label>DARE:</label>
-    <select id="f_dare">
-        <option value="Gerado">Gerado</option>
-        <option value="Não Gerado">Não Gerado</option>
-        <option value="Sistema com Problema">Sistema com Problema</option>
-    </select>
+   <h3>☢️ Raio-X</h3>
+   <label>Qtd de pacotes processados no Raio-X:</label> <input type="number" id="f_rx_processados" placeholder="Ex: 40000">
+   <label>Qtd de remessas não bipadas:</label> <input type="number" id="f_nao_bipadas" placeholder="Ex: 10">
+   
+   <label>Status de Funcionamento dos Raios-X:</label>
+   <div class="checkbox-group">
+       <label><input type="checkbox" class="chk-rx" value="RX-1" checked> RX-1</label>
+       <label><input type="checkbox" class="chk-rx" value="RX-2" checked> RX-2</label>
+       <label><input type="checkbox" class="chk-rx" value="RX-3" checked> RX-3</label>
+       <label><input type="checkbox" class="chk-rx" value="RX-4" checked> RX-4</label>
+       <label><input type="checkbox" class="chk-rx" value="RX-5" checked> RX-5</label>
+       <label><input type="checkbox" class="chk-rx" value="RX-6" checked> RX-6</label>
+   </div>
 
-    <h3><svg class="svg-icon"><use href="#icon-box"></use></svg> Fiscalização e Devolução</h3>
-    <label class="label-alerta">Mangas/Gaiolas/Paletes pendentes:</label> <input type="number" id="f_gaiolas" placeholder="Qtd pendente">
-    <label>Mangas/Gaiolas/Paletes concluídos:</label> <input type="number" id="f_gaiolas_conc" placeholder="Qtd concluída">
+   <label>Produção em manga palete?</label>
+   <select id="f_rx_manga" onchange="toggleVisibilidade('f_rx_manga', 'box_rx_manga', 'Não')">
+       <option value="Sim">Sim</option>
+       <option value="Não">Não</option>
+   </select>
+   <div id="box_rx_manga" class="hidden-field">
+       <label style="margin-top:0;">Horas de produção em:</label>
+       <input type="number" id="f_rx_hrs_saca" placeholder="Saca (Ex: 2 horas)">
+       <input type="number" id="f_rx_hrs_caixa" placeholder="Caixa de Papelão (Ex: 1.5 horas)">
+   </div>
 
-    <!-- SEÇÃO DE INVENTÁRIO -->
-    <div>
-        <h3 style="margin-top: 25px;"><svg class="svg-icon"><use href="#icon-db"></use></svg> Inventário</h3>
-        <label>Quantidade de remessas em fiscalização:</label> <input type="number" id="f_inv_fisc" placeholder="Qtd em fiscalização" oninput="calcularInventario()">
-        <label>Quantidade de remessas em devolução/manifestadas:</label> <input type="number" id="f_inv_dev" placeholder="Qtd em devolução" oninput="calcularInventario()">
-        <label>Quantidade de remessas liberadas/desembaraçadas:</label> <input type="number" id="f_inv_lib" placeholder="Qtd liberados" oninput="calcularInventario()">
-        <label>Quantidade de remessas em outros status:</label> <input type="number" id="f_inv_outros" placeholder="Qtd em outros status" oninput="calcularInventario()">
-        
-        <!-- Campo Total Calculado Automático -->
-        <label style="color: #007bff;">Qtd total de remessas no inventário (Automático):</label> 
-        <input type="number" id="f_inv_total" placeholder="0" readonly style="background-color: #f8f9fa; font-weight: bold; color: #007bff;">
-    </div>
+   <h3>🚚 Last-Mile</h3>
+   
+   <label>Problemas com o desembaraço?</label>
+   <select id="f_lm_prob" onchange="toggleVisibilidade('f_lm_prob', 'box_lm_prob', 'Sim')">
+       <option value="Não">Não</option>
+       <option value="Sim">Sim</option>
+   </select>
+   <div id="box_lm_prob" class="hidden-field">
+       <textarea id="f_lm_detalhe" rows="3" placeholder="Descreva os problemas (ex: Lentidão acima de 8h no desembaraço, Problemas no sistema da RFB)..."></textarea>
+   </div>
 
-    <h3><svg class="svg-icon"><use href="#icon-send"></use></svg> Exportação</h3>
-    <label>Lote atual de devolução:</label> <input type="text" id="f_exp_lote" placeholder="Ex: LOTE-012">
-    <label>Qtd total de remessas no lote:</label> <input type="number" id="f_exp_remessas" placeholder="Qtd de remessas">
-    <label>Qtd total de paletes no atual lote:</label> <input type="number" id="f_exp_paletes" placeholder="Qtd de paletes">
-    
-    <h3><svg class="svg-icon"><use href="#icon-obs"></use></svg> Observações Gerais</h3>
-    <label>Anotações do turno (Opcional):</label>
-    <textarea id="f_obs" placeholder="Informe aqui qualquer ocorrência, aviso ou detalhe relevante..."></textarea>
+   <label>Qtd de Carretas J&T:</label>
+   <input type="number" id="f_qtd_jt" placeholder="Ex: 2" min="0" oninput="gerarCamposCarretas('jt', 'J&T')">
+   <div id="container_jt" class="dynamic-list"></div>
 
-    <div class="btn-container">
-        <button id="btn-gerar" onclick="processarRelatorio()">Baixar e Compartilhar Relatório</button>
-    </div>
+   <label>Qtd de Carretas iMile:</label>
+   <input type="number" id="f_qtd_imile" placeholder="Ex: 3" min="0" oninput="gerarCamposCarretas('imile', 'iMile')">
+   <div id="container_imile" class="dynamic-list"></div>
+
+   <div class="total-display">Total Last-Mile Expedido: <span id="lbl_total_lm">0</span> remessas</div>
+
+   <!-- Nova seção de Insumos -->
+   <div class="insumos-title">📦 Insumos Last-Mile (Laterais e Bases)</div>
+   
+   <label style="margin-top: 10px; color: #d9534f;">J&T - Enviados:</label>
+   <div class="insumos-group">
+       <input type="number" id="f_jt_lat_env" placeholder="Qtd Laterais">
+       <input type="number" id="f_jt_bas_env" placeholder="Qtd Bases">
+   </div>
+   <label style="margin-top: 5px; color: #28a745;">J&T - Recebidos:</label>
+   <div class="insumos-group">
+       <input type="number" id="f_jt_lat_rec" placeholder="Qtd Laterais">
+       <input type="number" id="f_jt_bas_rec" placeholder="Qtd Bases">
+   </div>
+
+   <label style="margin-top: 15px; color: #d9534f;">iMile - Enviados:</label>
+   <div class="insumos-group">
+       <input type="number" id="f_imile_lat_env" placeholder="Qtd Laterais">
+       <input type="number" id="f_imile_bas_env" placeholder="Qtd Bases">
+   </div>
+   <label style="margin-top: 5px; color: #28a745;">iMile - Recebidos:</label>
+   <div class="insumos-group">
+       <input type="number" id="f_imile_lat_rec" placeholder="Qtd Laterais">
+       <input type="number" id="f_imile_bas_rec" placeholder="Qtd Bases">
+   </div>
+
+   <h3>👥 Gestão de Pessoas</h3>
+   <label>Absenteísmo:</label> <input type="number" id="f_absenteismo" placeholder="Qtd faltas totais">
+   <label>Total Efetivo Operacional:</label> <input type="number" id="f_efetivo_op" placeholder="Presentes na Operação">
+   <label>Total Liderança Operacional:</label> <input type="number" id="f_lider_op" placeholder="Presentes">
+   <label>Total Efetivo APAC:</label> <input type="number" id="f_efetivo_apac" placeholder="Presentes APAC">
+   <label>Total Liderança APAC:</label> <input type="number" id="f_lider_apac" placeholder="Presentes Liderança APAC">
+   
+   <label>Quadro Completo?</label>
+   <select id="f_quadro_comp" onchange="toggleVisibilidade('f_quadro_comp', 'box_quadro_falta', 'Não')">
+       <option value="Sim">Sim</option>
+       <option value="Não">Não</option>
+   </select>
+   <div id="box_quadro_falta" class="hidden-field">
+       <label style="margin-top: 0;">Faltas para fechar o quadro:</label>
+       <input type="number" id="f_falta_op" placeholder="Falta Operacional (Qtd)">
+       <input type="number" id="f_falta_apac" placeholder="Falta APAC (Qtd)">
+   </div>
+
+   <h3>🧹 5S</h3>
+   <label>Qtd de lâminas para retirada:</label>
+   <input type="number" id="f_laminas" placeholder="Ex: 10">
+
+   <label>Papelão, sacas e cantoneiras retirados?</label>
+   <select id="f_5s" onchange="toggleVisibilidade('f_5s', 'box_5s', 'Não')">
+       <option value="Sim">Sim</option>
+       <option value="Não">Não</option>
+   </select>
+   <div id="box_5s" class="hidden-field">
+       <textarea id="f_5s_detalhe" rows="3" placeholder="Descreva o que faltou ser retirado/organizado..."></textarea>
+   </div>
+
+   <h3>⛑️ EHS (Segurança)</h3>
+   <label>Houve Acidentes?</label>
+   <select id="f_ehs_acidente" onchange="toggleVisibilidade('f_ehs_acidente', 'box_ehs_acidente', 'Sim')">
+       <option value="Não">Não</option>
+       <option value="Sim">Sim</option>
+   </select>
+   <div id="box_ehs_acidente" class="hidden-field">
+       <textarea id="f_ehs_acidente_detalhe" rows="3" placeholder="Descreva os detalhes do acidente..."></textarea>
+   </div>
+
+   <label>Houve Incidentes?</label>
+   <select id="f_ehs_incidente" onchange="toggleVisibilidade('f_ehs_incidente', 'box_ehs_incidente', 'Sim')">
+       <option value="Não">Não</option>
+       <option value="Sim">Sim</option>
+   </select>
+   <div id="box_ehs_incidente" class="hidden-field">
+       <textarea id="f_ehs_incidente_detalhe" rows="3" placeholder="Descreva os detalhes do incidente..."></textarea>
+   </div>
+
+   <div class="btn-container">
+       <button onclick="processarRelatorio()">Gerar Relatório de Turno</button>
+   </div>
 </div>
 
-<!-- ============================================== -->
-<!-- ÁREA OCULTA QUE SERÁ TRANSFORMADA EM IMAGEM    -->
-<!-- ============================================== -->
-<div id="canvasArea">
-    <div class="header-img">Relatório de Passagem de Turno</div>
-    <div class="date-img" id="data-img"></div>
+<!-- O Wrapper agora está configurado para não atrapalhar o layout no celular -->
+<div id="canvasWrapper">
+   <div id="canvasArea">
+       <div class="header-img" id="r_titulo_turno">Relatório Operacional</div>
+       <div class="date-img" id="data-img"></div>
 
-    <div class="section-img">
-        <div class="section-title"><svg class="svg-icon"><use href="#icon-decl"></use></svg> Declaração (Por AWB)</div>
-        <div class="item-img"><span class="item-label">Qtd de AWBs importadas:</span> <span class="item-val" id="r_imp">-</span></div>
-        <div class="item-img"><span class="item-label">Qtd de AWBs manifestadas:</span> <span class="item-val" id="r_manif">-</span></div>
-        <div class="item-img"><span class="item-label">Qtd de AWBs declaradas:</span> <span class="item-val" id="r_decl">-</span></div>
-        
-        <div class="item-img text-alert"><span class="item-label">Troca de regime:</span> <span class="item-val" id="r_regime">-</span></div>
-        <div class="item-img text-alert"><span class="item-label">AWBs pend. importação-declaração:</span> <span class="item-val" id="r_pend_decl">-</span></div>
-    </div>
+       <div class="section-img">
+           <div class="section-title">⏱️ Operações</div>
+           <div class="item-img">Horário de Operação: <span class="item-val" id="r_horario">-</span></div>
+       </div>
 
-    <div class="section-img">
-        <div class="section-title"><svg class="svg-icon"><use href="#icon-money"></use></svg> Presença e Pagamento (Por AWB)</div>
-        <div class="item-img"><span class="item-label">Presenças feitas:</span> <span class="item-val" id="r_presenca">-</span></div>
-        <div class="item-img"><span class="item-label">Envios para pgto:</span> <span class="item-val" id="r_pgto">-</span></div>
-        
-        <div class="item-img text-alert"><span class="item-label">Pendentes Pres./DARF/Envio:</span> <span class="item-val" id="r_pend_darf">-</span></div>
-        <div class="item-img text-alert"><span class="item-label">AWBs pendentes de desembaraço:</span> <span class="item-val" id="r_desemb">-</span></div>
-        <div class="item-img text-alert"><span class="item-label">AWB pend. de desemb. mais antiga:</span> <span class="item-val" id="r_hora">-</span></div>
-        
-        <div style="margin-top: 15px; font-size: 14px; color: #666; font-weight: bold; padding-left: 8px;">Status dos Sistemas:</div>
-        <div class="item-img"><span class="item-label">- Manifesto:</span> <span class="item-val" id="r_sys_manif"></span></div>
-        <div class="item-img"><span class="item-label">- Declaração:</span> <span class="item-val" id="r_sys_decl"></span></div>
-        <div class="item-img"><span class="item-label">- Presença:</span> <span class="item-val" id="r_sys_presenca"></span></div>
-        <div class="item-img"><span class="item-label">- Geração DARF:</span> <span class="item-val" id="r_sys_darf"></span></div>
-        <div class="item-img"><span class="item-label">- Pagamento:</span> <span class="item-val" id="r_sys_pgto"></span></div>
-        <div class="item-img"><span class="item-label">- Desembaraço:</span> <span class="item-val" id="r_sys_desemb"></span></div>
-    </div>
+       <div class="section-img">
+           <div class="section-title">📥 Recebimento</div>
+           
+           <div style="display: flex; justify-content: space-between; flex-wrap: wrap; background: #f9f9f9; padding: 6px 10px; border-radius: 6px; border: 1px solid #eee; margin-bottom: 8px;">
+               <div style="width: 48%; margin-bottom: 4px; font-size: 12px; color: #444;">Equip. Pista: <span style="font-weight: bold; color: #111;" id="r_equip_pista">-</span></div>
+               <div style="width: 48%; margin-bottom: 4px; font-size: 12px; text-align: right; color: #444;">Equip. Importação: <span style="font-weight: bold; color: #111;" id="r_equip_importacao">-</span></div>
+               <div style="width: 48%; margin-bottom: 4px; font-size: 12px; color: #444;">Total Recebidos: <span style="font-weight: bold; color: #111;" id="r_equip_recebidos">-</span></div>
+               <div style="width: 48%; margin-bottom: 4px; font-size: 12px; text-align: right; color: #444;">Equipamentos Despaletizados: <span style="font-weight: bold;" class="status-success" id="r_equip_despaletizados">-</span></div>
+               <div style="width: 100%; font-size: 12px; color: #444; border-top: 1px solid #ddd; padding-top: 6px; margin-top: 2px; text-align: center;">Equipamentos dentro do armazem: <span style="font-weight: bold; color: #111;" id="r_equip_armazem">-</span></div>
+           </div>
+           
+           <div class="item-img" id="r_awb_combined" style="display: none;">AWBs Seleção / Problemas: <span class="item-val status-success">Não</span></div>
+           
+           <div class="item-img" id="r_awb_sel_row">AWBs em Seleção: <span class="item-val" id="r_awb_sel_status">-</span></div>
+           <div class="item-img" id="r_awb_sel_box" style="display: none; padding: 5px; background: #fffdf5; border-left: 2px solid #d39e00; margin-top: 5px; flex-direction: column;">
+               <em>Detalhes (Seleção):</em> <span class="item-val" id="r_awb_sel_detalhe" style="text-align: left; font-weight: normal; font-size: 12px; margin-top: 3px; white-space: pre-wrap;">-</span>
+           </div>
 
-    <div class="section-img">
-        <div class="section-title"><svg class="svg-icon"><use href="#icon-icms"></use></svg> ICMS</div>
-        <div class="item-img"><span class="item-label">GNRE ES:</span> <span class="item-val" id="r_es">-</span></div>
-        <div class="item-img"><span class="item-label">GNRE PE:</span> <span class="item-val" id="r_pe">-</span></div>
-        <div class="item-img"><span class="item-label">DARE:</span> <span class="item-val" id="r_dare">-</span></div>
-    </div>
+           <div class="item-img" id="r_awb_prob_row" style="margin-top: 5px;">AWBs com Problemas: <span class="item-val" id="r_awb_prob_status">-</span></div>
+           <div class="item-img" id="r_awb_prob_box" style="display: none; padding: 5px; background: #fdf5f5; border-left: 2px solid #d9534f; margin-top: 5px; flex-direction: column;">
+               <em>Detalhes (Problemas):</em> <span class="item-val" id="r_awb_prob_detalhe" style="text-align: left; font-weight: normal; font-size: 12px; margin-top: 3px; white-space: pre-wrap;">-</span>
+           </div>
 
-    <div class="section-img">
-        <div class="section-title"><svg class="svg-icon"><use href="#icon-box"></use></svg> Fiscalização e Devolução</div>
-        <div class="item-img text-alert"><span class="item-label">Mangas/Gaiolas pendentes:</span> <span class="item-val" id="r_gaiolas">-</span></div>
-        <div class="item-img"><span class="item-label">Mangas/Gaiolas/Paletes concluídos:</span> <span class="item-val" id="r_gaiolas_conc">-</span></div>
-    </div>
+           <div class="item-img" style="margin-top: 5px;">Atendimento Handling: <span class="item-val" id="r_handling_status">-</span></div>
+           <div class="item-img" id="r_handling_detalhe_box" style="display: none; padding: 5px; background: #fdf5f5; border-left: 2px solid #d9534f; margin-top: 5px; flex-direction: column;">
+               <em>Detalhe Handling:</em> <span class="item-val" id="r_handling_detalhe" style="text-align: left; font-weight: normal; font-size: 12px; margin-top: 3px; white-space: pre-wrap;">-</span>
+           </div>
+       </div>
 
-    <div class="section-img">
-        <div class="section-title"><svg class="svg-icon"><use href="#icon-db"></use></svg> Inventário</div>
-        <div class="item-img"><span class="item-label">Total de remessas no inventário:</span> <span class="item-val" id="r_inv_total">-</span></div>
-        <div class="item-img"><span class="item-label">Pacotes em fiscalização:</span> <span class="item-val" id="r_inv_fisc">-</span></div>
-        <div class="item-img"><span class="item-label">Pacotes em devolução:</span> <span class="item-val" id="r_inv_dev">-</span></div>
-        <div class="item-img"><span class="item-label">Pacotes liberados/desembaraçados:</span> <span class="item-val" id="r_inv_lib">-</span></div>
-        <div class="item-img"><span class="item-label">Pacotes em outros status:</span> <span class="item-val" id="r_inv_outros">-</span></div>
-    </div>
+       <div class="section-img">
+           <div class="section-title">☢️ Raio-X</div>
 
-    <div class="section-img">
-        <div class="section-title"><svg class="svg-icon"><use href="#icon-send"></use></svg> Exportação</div>
-        <div class="item-img"><span class="item-label">Lote atual de devolução:</span> <span class="item-val" id="r_exp_lote">-</span></div>
-        <div class="item-img"><span class="item-label">Total de remessas no lote:</span> <span class="item-val" id="r_exp_remessas">-</span></div>
-        <div class="item-img"><span class="item-label">Total de paletes no atual lote:</span> <span class="item-val" id="r_exp_paletes">-</span></div>
-    </div>
+           <div class="item-img rx-line-container" style="margin-top: 5px;">
+               <span style="white-space: nowrap;">Status Raio-X:</span>
+               <div id="r_rx_status" class="rx-grid-report"></div>
+           </div>
+           
+           <div class="item-img" style="margin-top: 5px;">Produção Manga Palete: <span class="item-val" id="r_rx_manga_status">-</span></div>
+           <div class="item-img" id="r_rx_manga_box" style="display: none; padding: 5px; background: #fffdf5; border-left: 2px solid #d39e00; margin-top: 5px; flex-direction: column;">
+               <em>Produção Alternativas:</em> <span class="item-val" id="r_rx_manga_detalhe" style="text-align: left; font-weight: normal; font-size: 12px; margin-top: 3px; white-space: pre-wrap;">-</span>
+           </div>
 
-    <div class="section-img">
-        <div class="section-title"><svg class="svg-icon"><use href="#icon-obs"></use></svg> Observações Gerais</div>
-        <div class="obs-box" id="r_obs">-</div>
-    </div>
+           <div class="item-img" style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 8px;">
+               <strong style="font-size: 15px;">PROCESSADOS / PENDÊNCIAS:</strong>
+               <span class="item-val" id="r_rx_combinado" style="font-size: 15px;">-</span>
+           </div>
+       </div>
+
+       <div class="section-img">
+           <div class="section-title">🚚 Last-Mile</div>
+           
+           <div class="item-img" id="r_lm_prob_row">Problemas no desembaraço: <span class="item-val" id="r_lm_prob_status">-</span></div>
+           <div class="item-img" id="r_lm_prob_box" style="display: none; padding: 5px; background: #fdf5f5; border-left: 2px solid #d9534f; margin-top: 5px; margin-bottom: 10px; flex-direction: column;">
+               <em>Detalhes:</em> <span class="item-val" id="r_lm_prob_detalhe" style="text-align: left; font-weight: normal; font-size: 12px; margin-top: 3px; white-space: pre-wrap;">-</span>
+           </div>
+
+           <div class="item-img" style="flex-direction: column;">
+               <strong>J&T:</strong>
+               <div id="r_lista_jt" class="truck-list-img">Nenhuma carreta registrada.</div>
+           </div>
+           <div class="item-img" style="flex-direction: column;">
+               <strong>iMile:</strong>
+               <div id="r_lista_imile" class="truck-list-img">Nenhuma carreta registrada.</div>
+           </div>
+           <div class="item-img" style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 8px;">
+               <strong style="font-size: 15px;">TOTAL EXPEDIDO:</strong> <span class="item-val status-success" id="r_total_lm" style="font-size: 15px;">0 remessas</span>
+           </div>
+
+           <!-- Novo quadro de Insumos no relatório -->
+           <div class="item-img" style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 8px; flex-direction: column;">
+               <strong style="font-size: 14px; margin-bottom: 5px; color: #333;">📦 Controle de Insumos (Laterais / Bases):</strong>
+               <div style="display: flex; justify-content: space-between; background: #f9f9f9; padding: 8px; border-radius: 6px; border: 1px solid #eee; width: 100%; box-sizing: border-box;">
+                   <div style="width: 48%; font-size: 12px; color: #444;">
+                       <strong style="color: #111;">J&T</strong><br>
+                       <span style="display: inline-block; margin-top: 4px;">Enviados: <span style="font-weight: bold; color: #111;" id="r_jt_lat_env">0</span> Lat / <span style="font-weight: bold; color: #111;" id="r_jt_bas_env">0</span> Bas</span><br>
+                       <span style="display: inline-block; margin-top: 3px;">Recebidos: <span style="font-weight: bold; color: #111;" id="r_jt_lat_rec">0</span> Lat / <span style="font-weight: bold; color: #111;" id="r_jt_bas_rec">0</span> Bas</span>
+                   </div>
+                   <div style="width: 48%; font-size: 12px; color: #444;">
+                       <strong style="color: #111;">iMile</strong><br>
+                       <span style="display: inline-block; margin-top: 4px;">Enviados: <span style="font-weight: bold; color: #111;" id="r_imile_lat_env">0</span> Lat / <span style="font-weight: bold; color: #111;" id="r_imile_bas_env">0</span> Bas</span><br>
+                       <span style="display: inline-block; margin-top: 3px;">Recebidos: <span style="font-weight: bold; color: #111;" id="r_imile_lat_rec">0</span> Lat / <span style="font-weight: bold; color: #111;" id="r_imile_bas_rec">0</span> Bas</span>
+                   </div>
+               </div>
+           </div>
+       </div>
+
+       <div class="section-img">
+           <div class="section-title">👥 Gestão de Pessoas</div>
+           <div class="item-img">Absenteísmo (Faltas): <span class="item-val" id="r_absenteismo">-</span></div>
+           <div class="item-img">Efetivo Operacional / Líder: <span class="item-val" id="r_op_geral">-</span></div>
+           <div class="item-img">Efetivo APAC / Líder: <span class="item-val" id="r_apac_geral">-</span></div>
+           <div class="item-img">Quadro Completo? <span class="item-val" id="r_quadro_comp">-</span></div>
+       </div>
+
+       <div class="section-img">
+           <div class="section-title">🧹 5S</div>
+           <div class="item-img">Lâminas para retirada: <span class="item-val" id="r_laminas">-</span></div>
+           <div class="item-img">Papelão, sacas e cantoneiras retirados? <span class="item-val" id="r_5s_status">-</span></div>
+           <div class="item-img" id="r_5s_box" style="display: none; padding: 5px; background: #fffdf5; border-left: 2px solid #d39e00; margin-top: 5px; flex-direction: column;">
+               <em>Observações de 5S:</em> <span class="item-val" id="r_5s_detalhe" style="text-align: left; font-weight: normal; font-size: 12px; margin-top: 3px; white-space: pre-wrap;">-</span>
+           </div>
+       </div>
+
+       <div class="section-img">
+           <div class="section-title">⛑️ EHS</div>
+           <div class="item-img" id="r_ehs_combined" style="display: none;">Acidentes / Incidentes: <span class="item-val status-success">Não</span></div>
+           
+           <div class="item-img" id="r_ehs_acidente_row">Acidentes reportados: <span class="item-val" id="r_ehs_acidente_status">-</span></div>
+           <div class="item-img" id="r_ehs_acidente_box" style="display: none; padding: 5px; background: #fdf5f5; border-left: 2px solid #d9534f; margin-top: 5px; flex-direction: column;">
+               <em>Detalhes do Acidente:</em> <span class="item-val" id="r_ehs_acidente_detalhe" style="text-align: left; font-weight: normal; font-size: 12px; margin-top: 3px; white-space: pre-wrap;">-</span>
+           </div>
+
+           <div class="item-img" id="r_ehs_incidente_row" style="margin-top: 5px;">Incidentes reportados: <span class="item-val" id="r_ehs_incidente_status">-</span></div>
+           <div class="item-img" id="r_ehs_incidente_box" style="display: none; padding: 5px; background: #fffdf5; border-left: 2px solid #d39e00; margin-top: 5px; flex-direction: column;">
+               <em>Detalhes do Incidente:</em> <span class="item-val" id="r_ehs_incidente_detalhe" style="text-align: left; font-weight: normal; font-size: 12px; margin-top: 3px; white-space: pre-wrap;">-</span>
+           </div>
+       </div>
+   </div>
 </div>
 
 <script>
-    // Calculadora Automática do Inventário
-    function calcularInventario() {
-        let vFisc = parseInt(document.getElementById('f_inv_fisc').value) || 0;
-        let vDev = parseInt(document.getElementById('f_inv_dev').value) || 0;
-        let vLib = parseInt(document.getElementById('f_inv_lib').value) || 0;
-        let vOutros = parseInt(document.getElementById('f_inv_outros').value) || 0;
+   function formatarDataHora(inputDatetime) {
+       if(!inputDatetime) return '--/--/---- às --:--';
+       let partes = inputDatetime.split('T');
+       if(partes.length < 2) return inputDatetime;
+       let dataStr = partes[0].split('-').reverse().join('/');
+       let horaStr = partes[1];
+       return `${dataStr} às ${horaStr}`;
+   }
 
-        let somaStatus = vFisc + vDev + vLib + vOutros;
-        
-        // Atualiza visualmente no input de leitura
-        document.getElementById('f_inv_total').value = somaStatus;
-    }
+   function toggleVisibilidade(idSelect, idAlvo, valorGatilho) {
+       let select = document.getElementById(idSelect).value;
+       let alvo = document.getElementById(idAlvo);
+       if (select === valorGatilho) {
+           alvo.style.display = 'block';
+       } else {
+           alvo.style.display = 'none';
+       }
+   }
 
-    function preencherValor(idOrigem, idDestino) {
-        let elementoOrigem = document.getElementById(idOrigem);
-        let destino = document.getElementById(idDestino);
-        
-        if (!elementoOrigem || !destino) return;
-        
-        let valor = elementoOrigem.value;
-        
-        if (idOrigem === 'f_obs') {
-            destino.innerText = valor.trim() ? valor : 'Nenhuma observação registrada.';
-            return;
-        }
-        
-        if (elementoOrigem.type === "text" && !valor) {
-            destino.innerText = '-';
-        } else {
-            destino.innerText = valor ? valor : '0';
-        }
-        
-        if (valor === "Sistema com Problema" || valor === "Não Gerado") {
-            destino.style.color = "#d9534f"; // Vermelho
-        } else {
-            destino.style.color = ""; // Reseta a cor para campos de texto normais
-        }
-    }
+   function gerarCamposCarretas(empresaId, nomeExibicao) {
+       let qtd = parseInt(document.getElementById(`f_qtd_${empresaId}`).value, 10) || 0;
+       let container = document.getElementById(`container_${empresaId}`);
+       container.innerHTML = '';
+       
+       for(let i = 1; i <= qtd; i++) {
+           container.innerHTML += `<input type="number" class="calc-lm calc-${empresaId}" placeholder="${nomeExibicao} - Carreta ${i} (Qtd Remessas)" oninput="calcularTotalLastMile()">`;
+       }
+       calcularTotalLastMile();
+   }
 
-    function preencherStatusCheckbox(idCheckbox, idDestino) {
-        let chk = document.getElementById(idCheckbox);
-        let destino = document.getElementById(idDestino);
-        
-        if (chk.checked) {
-            destino.innerText = "✔ OK";
-            destino.style.color = "#28a745"; // Verde Sucesso
-        } else {
-            destino.innerText = "✖ Problema";
-            destino.style.color = "#dc3545"; // Vermelho Alerta
-        }
-    }
+   function calcularTotalLastMile() {
+       let total = 0;
+       document.querySelectorAll('.calc-lm').forEach(input => {
+           total += parseInt(input.value, 10) || 0;
+       });
+       document.getElementById('lbl_total_lm').innerText = total.toLocaleString('pt-BR');
+       return total;
+   }
 
-    function formatarDataHora(inputDatetime) {
-        if(!inputDatetime) return '-';
-        let partes = inputDatetime.split('T');
-        if(partes.length < 2) return inputDatetime;
-        let dataStr = partes[0].split('-').reverse().join('/');
-        let horaStr = partes[1];
-        return `${dataStr} às ${horaStr}`;
-    }
+   function preencherTexto(idOrigem, idDestino, fallback = '0') {
+       let val = document.getElementById(idOrigem).value;
+       let finalVal = val ? parseInt(val, 10) : 0;
+       document.getElementById(idDestino).innerText = isNaN(finalVal) || !val ? fallback : finalVal.toLocaleString('pt-BR');
+   }
 
-    function processarRelatorio() {
-        // Garante que o inventário calcule e envie certo, mesmo que o user não digite nada
-        calcularInventario();
+   function processarRelatorio() {
+       let turnoSelecionado = document.getElementById('f_turno').value;
+       document.getElementById('r_titulo_turno').innerText = `Relatório Operacional - ${turnoSelecionado}`;
 
-        const agora = new Date().toLocaleString('pt-BR');
-        document.getElementById('data-img').innerText = "Gerado em: " + agora;
+       const dataAtual = new Date();
+       const strData = dataAtual.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' });
+       document.getElementById('data-img').innerText = `Gerado em: ${strData} às ${dataAtual.toLocaleTimeString('pt-BR')}`;
 
-        // Mapear dados
-        preencherValor('f_imp', 'r_imp');
-        preencherValor('f_manif', 'r_manif');
-        preencherValor('f_decl', 'r_decl');
-        preencherValor('f_regime', 'r_regime');
-        preencherValor('f_pend_decl', 'r_pend_decl');
-        preencherValor('f_presenca', 'r_presenca');
-        preencherValor('f_pgto', 'r_pgto');
-        preencherValor('f_pend_darf', 'r_pend_darf');
-        preencherValor('f_desemb', 'r_desemb');
-        
-        let inputHora = document.getElementById('f_hora').value;
-        document.getElementById('r_hora').innerText = formatarDataHora(inputHora);
+       let inicio = formatarDataHora(document.getElementById('f_hr_inicio').value);
+       let fim = formatarDataHora(document.getElementById('f_hr_fim').value);
+       document.getElementById('r_horario').innerText = `${inicio} até ${fim}`;
 
-        // Status dos Sistemas (usando Checkbox customizados)
-        preencherStatusCheckbox('f_sys_manif', 'r_sys_manif');
-        preencherStatusCheckbox('f_sys_decl', 'r_sys_decl');
-        preencherStatusCheckbox('f_sys_presenca', 'r_sys_presenca');
-        preencherStatusCheckbox('f_sys_darf', 'r_sys_darf');
-        preencherStatusCheckbox('f_sys_pgto', 'r_sys_pgto');
-        preencherStatusCheckbox('f_sys_desemb', 'r_sys_desemb');
-        
-        // ICMS
-        preencherValor('f_es', 'r_es');
-        preencherValor('f_pe', 'r_pe');
-        preencherValor('f_dare', 'r_dare');
-        
-        // Fiscalização
-        preencherValor('f_gaiolas', 'r_gaiolas');
-        preencherValor('f_gaiolas_conc', 'r_gaiolas_conc');
-        
-        // Inventário
-        preencherValor('f_inv_total', 'r_inv_total');
-        preencherValor('f_inv_fisc', 'r_inv_fisc');
-        preencherValor('f_inv_dev', 'r_inv_dev');
-        preencherValor('f_inv_lib', 'r_inv_lib');
-        preencherValor('f_inv_outros', 'r_inv_outros');
+       preencherTexto('f_equip_pista', 'r_equip_pista');
+       preencherTexto('f_equip_importacao', 'r_equip_importacao');
+       preencherTexto('f_equip_recebidos', 'r_equip_recebidos');
+       preencherTexto('f_equip_armazem', 'r_equip_armazem');
+       preencherTexto('f_equip_despaletizados', 'r_equip_despaletizados');
 
-        // Exportação
-        preencherValor('f_exp_lote', 'r_exp_lote');
-        preencherValor('f_exp_remessas', 'r_exp_remessas');
-        preencherValor('f_exp_paletes', 'r_exp_paletes');
+       let awbSel = document.getElementById('f_awb_sel').value;
+       let awbProb = document.getElementById('f_awb_prob').value;
 
-        preencherValor('f_obs', 'r_obs');
+       if (awbSel === 'Não' && awbProb === 'Não') {
+           document.getElementById('r_awb_combined').style.display = 'flex';
+           document.getElementById('r_awb_sel_row').style.display = 'none';
+           document.getElementById('r_awb_prob_row').style.display = 'none';
+           document.getElementById('r_awb_sel_box').style.display = 'none';
+           document.getElementById('r_awb_prob_box').style.display = 'none';
+       } else {
+           document.getElementById('r_awb_combined').style.display = 'none';
+           document.getElementById('r_awb_sel_row').style.display = 'flex';
+           document.getElementById('r_awb_prob_row').style.display = 'flex';
 
-        // Gerar Imagem 
-        const canvasElement = document.querySelector("#canvasArea");
-        
-        html2canvas(canvasElement, { 
-            scale: 2,          
-            useCORS: true, 
-            backgroundColor: "#ffffff",
-            logging: false
-        }).then(canvas => {
-            canvas.toBlob(blob => {
-                const nomeArquivo = 'relatorio_passagem_turno.png';
-                const urlDownload = URL.createObjectURL(blob);
-                
-                const linkDownload = document.createElement('a');
-                linkDownload.download = nomeArquivo;
-                linkDownload.href = urlDownload;
-                linkDownload.click();
-                URL.revokeObjectURL(urlDownload);
+           if(awbSel === 'Sim') {
+               let qtd = document.getElementById('f_awb_sel_qtd').value || '0';
+               let num = document.getElementById('f_awb_sel_num').value || 'Não informado';
+               document.getElementById('r_awb_sel_status').innerHTML = `<span class="status-warn">Sim (${qtd} AWB)</span>`;
+               document.getElementById('r_awb_sel_box').style.display = 'flex';
+               document.getElementById('r_awb_sel_detalhe').innerText = num;
+           } else {
+               document.getElementById('r_awb_sel_status').innerText = "Não";
+               document.getElementById('r_awb_sel_box').style.display = 'none';
+           }
 
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], nomeArquivo, { type: blob.type })] })) {
-                    const arquivoParaCompartilhar = new File([blob], nomeArquivo, { type: blob.type });
-                    setTimeout(() => {
-                        navigator.share({
-                            files: [arquivoParaCompartilhar],
-                            title: 'Relatório de Passagem de Turno'
-                        }).catch(err => console.log("Compartilhamento cancelado:", err));
-                    }, 400);
-                }
-            }, 'image/png');
-        });
-    }
+           if(awbProb === 'Sim') {
+               let qtd = document.getElementById('f_awb_prob_qtd').value || '0';
+               let num = document.getElementById('f_awb_prob_num').value || 'Não informado';
+               document.getElementById('r_awb_prob_status').innerHTML = `<span class="status-alert">Sim (${qtd} AWB)</span>`;
+               document.getElementById('r_awb_prob_box').style.display = 'flex';
+               document.getElementById('r_awb_prob_detalhe').innerText = num;
+           } else {
+               document.getElementById('r_awb_prob_status').innerText = "Não";
+               document.getElementById('r_awb_prob_box').style.display = 'none';
+           }
+       }
+
+       let handling = document.getElementById('f_handling_status').value;
+       document.getElementById('r_handling_status').innerText = handling;
+       let boxHandlingDetalhe = document.getElementById('r_handling_detalhe_box');
+       if(handling === 'Com Problemas') {
+           document.getElementById('r_handling_status').classList.add('status-alert');
+           boxHandlingDetalhe.style.display = 'flex';
+           document.getElementById('r_handling_detalhe').innerText = document.getElementById('f_handling_detalhe').value || 'Nenhum detalhe fornecido.';
+       } else {
+           document.getElementById('r_handling_status').classList.remove('status-alert');
+           boxHandlingDetalhe.style.display = 'none';
+       }
+
+       let rxContainerReport = document.getElementById('r_rx_status');
+       rxContainerReport.innerHTML = '';
+
+       document.querySelectorAll('.chk-rx').forEach((chk, index) => {
+           let machineName = `0${index + 1}`;
+           if(chk.checked) {
+               rxContainerReport.innerHTML += `<div class="rx-item">RX-${machineName}: <span class="status-success" style="font-size: 14px;">✔</span></div>`;
+           } else {
+               rxContainerReport.innerHTML += `<div class="rx-item">RX-${machineName}: <span class="status-alert" style="font-size: 14px;">❌</span></div>`;
+           }
+       });
+
+       if(document.getElementById('f_rx_manga').value === 'Não') {
+           let saca = document.getElementById('f_rx_hrs_saca').value || '0';
+           let caixa = document.getElementById('f_rx_hrs_caixa').value || '0';
+           document.getElementById('r_rx_manga_status').innerHTML = `<span class="status-warn">Não</span>`;
+           document.getElementById('r_rx_manga_box').style.display = 'flex';
+           document.getElementById('r_rx_manga_detalhe').innerText = `Produção em Saca: ${saca} horas \nProdução em Caixa de Papelão: ${caixa} horas`;
+       } else {
+           document.getElementById('r_rx_manga_status').innerHTML = `<span class="status-success">Sim</span>`;
+           document.getElementById('r_rx_manga_box').style.display = 'none';
+       }
+
+       let rxTotalStr = document.getElementById('f_rx_processados').value;
+       let naoBipadasStr = document.getElementById('f_nao_bipadas').value;
+       let rxTotal = parseInt(rxTotalStr, 10) || 0;
+       let naoBipadas = parseInt(naoBipadasStr, 10) || 0;
+       
+       let formatadoTotal = isNaN(rxTotal) || !rxTotalStr ? '0' : rxTotal.toLocaleString('pt-BR');
+       let formatadoPend = isNaN(naoBipadas) || !naoBipadasStr ? '0' : naoBipadas.toLocaleString('pt-BR');
+       let elCombinadoRx = document.getElementById('r_rx_combinado');
+
+       if(rxTotal > 0) {
+           let taxa = ((rxTotal - naoBipadas) / rxTotal) * 100;
+           let classTaxa = taxa < 99.95 ? 'status-alert' : 'status-success';
+           elCombinadoRx.innerHTML = `${formatadoTotal} / ${formatadoPend} - Taxa de <span class="${classTaxa}">${taxa.toFixed(2)}%</span>`;
+       } else {
+           elCombinadoRx.innerHTML = `${formatadoTotal} / ${formatadoPend} - Taxa de -`;
+       }
+
+       // Processamento de Insumos Last-Mile
+       preencherTexto('f_jt_lat_env', 'r_jt_lat_env');
+       preencherTexto('f_jt_bas_env', 'r_jt_bas_env');
+       preencherTexto('f_jt_lat_rec', 'r_jt_lat_rec');
+       preencherTexto('f_jt_bas_rec', 'r_jt_bas_rec');
+
+       preencherTexto('f_imile_lat_env', 'r_imile_lat_env');
+       preencherTexto('f_imile_bas_env', 'r_imile_bas_env');
+       preencherTexto('f_imile_lat_rec', 'r_imile_lat_rec');
+       preencherTexto('f_imile_bas_rec', 'r_imile_bas_rec');
+
+       preencherTexto('f_absenteismo', 'r_absenteismo');
+       let efOp = document.getElementById('f_efetivo_op').value || '0';
+       let lidOp = document.getElementById('f_lider_op').value || '0';
+       document.getElementById('r_op_geral').innerText = `${efOp} Op + ${lidOp} Líder`;
+
+       let efApac = document.getElementById('f_efetivo_apac').value || '0';
+       let lidApac = document.getElementById('f_lider_apac').value || '0';
+       document.getElementById('r_apac_geral').innerText = `${efApac} Apac + ${lidApac} Líder`;
+
+       if(document.getElementById('f_quadro_comp').value === 'Sim') {
+           document.getElementById('r_quadro_comp').innerHTML = `<span class="status-success">Sim</span>`;
+           document.getElementById('r_quadro_comp').classList.remove('status-alert');
+       } else {
+           let fOp = document.getElementById('f_falta_op').value || '0';
+           let fApac = document.getElementById('f_falta_apac').value || '0';
+           document.getElementById('r_quadro_comp').innerHTML = `<span class="status-alert">Não (Falta: ${fOp} Op, ${fApac} Apac)</span>`;
+       }
+
+       preencherTexto('f_laminas', 'r_laminas');
+
+       if(document.getElementById('f_5s').value === 'Não') {
+           document.getElementById('r_5s_status').innerHTML = `<span class="status-warn">Não</span>`;
+           document.getElementById('r_5s_box').style.display = 'flex';
+           document.getElementById('r_5s_detalhe').innerText = document.getElementById('f_5s_detalhe').value || 'Nenhuma observação informada.';
+       } else {
+           document.getElementById('r_5s_status').innerHTML = `<span class="status-success">Sim</span>`;
+           document.getElementById('r_5s_box').style.display = 'none';
+       }
+
+       let ehsAcidente = document.getElementById('f_ehs_acidente').value;
+       let ehsIncidente = document.getElementById('f_ehs_incidente').value;
+
+       if (ehsAcidente === 'Não' && ehsIncidente === 'Não') {
+           document.getElementById('r_ehs_combined').style.display = 'flex';
+           document.getElementById('r_ehs_acidente_row').style.display = 'none';
+           document.getElementById('r_ehs_incidente_row').style.display = 'none';
+           document.getElementById('r_ehs_acidente_box').style.display = 'none';
+           document.getElementById('r_ehs_incidente_box').style.display = 'none';
+       } else {
+           document.getElementById('r_ehs_combined').style.display = 'none';
+           document.getElementById('r_ehs_acidente_row').style.display = 'flex';
+           document.getElementById('r_ehs_incidente_row').style.display = 'flex';
+
+           if(ehsAcidente === 'Sim') {
+               document.getElementById('r_ehs_acidente_status').innerHTML = `<span class="status-alert">Sim</span>`;
+               document.getElementById('r_ehs_acidente_box').style.display = 'flex';
+               document.getElementById('r_ehs_acidente_detalhe').innerText = document.getElementById('f_ehs_acidente_detalhe').value || 'Nenhum detalhe informado.';
+           } else {
+               document.getElementById('r_ehs_acidente_status').innerHTML = `<span class="status-success">Não</span>`;
+               document.getElementById('r_ehs_acidente_box').style.display = 'none';
+           }
+
+           if(ehsIncidente === 'Sim') {
+               document.getElementById('r_ehs_incidente_status').innerHTML = `<span class="status-warn">Sim</span>`;
+               document.getElementById('r_ehs_incidente_box').style.display = 'flex';
+               document.getElementById('r_ehs_incidente_detalhe').innerText = document.getElementById('f_ehs_incidente_detalhe').value || 'Nenhum detalhe informado.';
+           } else {
+               document.getElementById('r_ehs_incidente_status').innerHTML = `<span class="status-success">Não</span>`;
+               document.getElementById('r_ehs_incidente_box').style.display = 'none';
+           }
+       }
+
+       let lmProb = document.getElementById('f_lm_prob').value;
+       if(lmProb === 'Sim') {
+           document.getElementById('r_lm_prob_status').innerHTML = `<span class="status-alert">Sim</span>`;
+           document.getElementById('r_lm_prob_box').style.display = 'flex';
+           document.getElementById('r_lm_prob_detalhe').innerText = document.getElementById('f_lm_detalhe').value || 'Nenhum detalhe informado.';
+       } else {
+           document.getElementById('r_lm_prob_status').innerHTML = `<span class="status-success">Não</span>`;
+           document.getElementById('r_lm_prob_box').style.display = 'none';
+       }
+
+       let parseCarretas = (classe, containerId) => {
+           let html = '';
+           let subtotal = 0;
+           document.querySelectorAll(classe).forEach((input, idx) => {
+               let val = parseInt(input.value, 10) || 0;
+               subtotal += val;
+               html += `<div style="font-size: 11px; font-weight: normal; color: #555;">- Carreta 0${idx+1}: <strong style="color: #111;">${val.toLocaleString('pt-BR')}</strong> remessas</div>`;
+           });
+           if (html === '') html = 'Nenhuma carreta registrada.';
+           else html += `<div style="margin-top:4px; font-size:11px; color:#555;">Subtotal: ${subtotal.toLocaleString('pt-BR')}</div>`;
+           
+           document.getElementById(containerId).innerHTML = html;
+       };
+
+       parseCarretas('.calc-jt', 'r_lista_jt');
+       parseCarretas('.calc-imile', 'r_lista_imile');
+       document.getElementById('r_total_lm').innerText = calcularTotalLastMile().toLocaleString('pt-BR') + ' remessas';
+
+       setTimeout(() => {
+           const elementoCanvas = document.querySelector("#canvasArea");
+           
+           html2canvas(elementoCanvas, {
+               scale: 2,
+               useCORS: true,        
+               allowTaint: true,    
+               width: 640,            
+               windowWidth: 640,
+               scrollX: 0,
+               scrollY: 0,
+               onclone: function (documentoClonado) {
+                   const wrapperClonado = documentoClonado.getElementById('canvasWrapper');
+                   if (wrapperClonado) {
+                       wrapperClonado.style.position = 'absolute';
+                       wrapperClonado.style.left = '0';
+                       wrapperClonado.style.top = '0';
+                       wrapperClonado.style.zIndex = '9999';
+                       wrapperClonado.style.width = '640px';
+                       wrapperClonado.style.visibility = 'visible';
+                   }
+               }
+           }).then(canvas => {
+               canvas.toBlob(blob => {
+                   const nomeArquivo = `Relatório ${document.getElementById('f_turno').value} ${new Date().toLocaleString('pt-BR').replace(/[\/:]/g, '-')}.png`;
+                   
+                   const urlDownload = URL.createObjectURL(blob);
+                   const linkDownload = document.createElement('a');
+                   linkDownload.download = nomeArquivo;
+                   linkDownload.href = urlDownload;
+                   linkDownload.click();
+                   URL.revokeObjectURL(urlDownload);
+
+                   if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], nomeArquivo, { type: blob.type })] })) {
+                       const arquivoParaCompartilhar = new File([blob], nomeArquivo, { type: blob.type });
+                       setTimeout(() => {
+                           navigator.share({
+                               files: [arquivoParaCompartilhar],
+                               title: 'Relatório de Passagem de Turno',
+                               text: `Passagem de turno gerada em: ${new Date().toLocaleString('pt-BR')}`
+                           }).catch(err => console.log("Compartilhamento cancelado:", err));
+                       }, 400);
+                   }
+               }, 'image/png');
+           });
+       }, 150);
+   }
 </script>
 
 </body>
