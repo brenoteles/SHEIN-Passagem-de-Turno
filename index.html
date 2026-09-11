@@ -11,14 +11,14 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            /* Paleta Dark Profissional (Estilo Dashboard Moderno) */
+            /* Paleta Dark Profissional */
             --bg: #09090b;
             --surface: #18181b;
             --surface-2: #27272a;
             --border: #3f3f46;
             --text: #f4f4f5;
             --text-dim: #a1a1aa;
-            --accent: #6366f1; /* Indigo */
+            --accent: #6366f1; 
             --accent-hover: #4f46e5;
             --accent-glow: rgba(99, 102, 241, 0.25);
             --red: #ef4444;
@@ -38,18 +38,13 @@
             padding: 16px;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
 
         /* Animações */
         @keyframes fadeSlideUp {
             0% { opacity: 0; transform: translateY(20px); }
             100% { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 0 0 var(--accent-glow); }
-            70% { box-shadow: 0 0 0 6px transparent; }
-            100% { box-shadow: 0 0 0 0 transparent; }
         }
 
         .animated-section {
@@ -262,11 +257,14 @@
         #canvasArea {
             position: absolute; left: -9999px; top: 0;
             width: 650px; padding: 0;
-            background: #09090b; /* Fundo super escuro para a imagem */
+            background: #09090b; 
             font-family: var(--font-sans);
             box-sizing: border-box;
             color: #f4f4f5;
             border: 1px solid #27272a;
+            /* Suavização de fontes para o canvas */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         .img-header {
             background: #18181b;
@@ -319,7 +317,6 @@
             padding: 8px 0; font-size: 15px; color: #d4d4d8;
         }
         .item-label { flex: 1; padding-right: 16px; font-weight: 500; }
-        /* Destaque para os números na imagem */
         .item-val { 
             font-size: 18px; 
             font-weight: 800; 
@@ -388,7 +385,7 @@
             <div class="field"><label>Qtd de AWBs importadas</label><input type="number" id="f_imp" placeholder="0"></div>
             <div class="field"><label>Qtd de AWBs manifestadas</label><input type="number" id="f_manif" placeholder="0"></div>
             <div class="field"><label>Qtd de AWBs declaradas</label><input type="number" id="f_decl" placeholder="0"></div>
-            <div class="field"><label class="alert">AWBs pendentes de troca de regime</label><input type="text" id="f_regime" placeholder="Qtd de AWBs"></div>
+            <div class="field"><label class="alert">AWBs pendentes de troca de regime</label><input type="number" id="f_regime" placeholder="0"></div>
             <div class="field"><label class="alert">AWBs pend. importação-declaração</label><input type="number" id="f_pend_decl" placeholder="0"></div>
         </div>
 
@@ -523,7 +520,6 @@
 </div>
 
 <script>
-    // Adiciona animação no carregamento
     document.addEventListener("DOMContentLoaded", () => {
         const sections = document.querySelectorAll('.animated-section');
         sections.forEach((sec, index) => {
@@ -542,15 +538,13 @@
         let v = el.value;
         if (idO === 'f_obs') { dest.innerText = v.trim() ? v : 'Nenhum apontamento extra para este turno.'; return; }
         
-        // Se for texto vazio preenche traço, se for numero vazio preenche 0
         if (el.type === "text" && !v) { dest.innerText = '-'; } else { dest.innerText = v ? v : '0'; }
         
-        // Adiciona classe de alerta no pai para formatar os selects de ICMS corretamente no relatorio
         if (v === "Sistema com Problema" || v === "Não Gerado") { 
             dest.parentElement.classList.add('text-alert');
         } else if (el.tagName === 'SELECT') { 
             dest.parentElement.classList.remove('text-alert');
-            dest.parentElement.classList.add('highlight-val'); // GNRE "Gerado" fica verde
+            dest.parentElement.classList.add('highlight-val');
         }
     }
 
@@ -585,7 +579,6 @@
     }
 
     function processarRelatorio() {
-        // Efeito visual no botão ao gerar
         const btn = document.getElementById('btn-gerar');
         const textOrig = btn.innerHTML;
         btn.innerHTML = '<svg style="animation: spin 1s linear infinite; width:20px;height:20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> Processando...';
@@ -621,9 +614,9 @@
         preencherValor('f_exp_paletes', 'r_exp_paletes');
         preencherValor('f_obs', 'r_obs');
 
-        // Renderiza o Canvas fixado em 650px de largura
+        // Escala aumentada para 4, garantindo resolução ultra-alta, blindando contra a compressão do WhatsApp
         html2canvas(document.querySelector("#canvasArea"), {
-            scale: 2, 
+            scale: 4, 
             useCORS: true, 
             backgroundColor: "#09090b", 
             logging: false,
@@ -642,7 +635,6 @@
                     }, 400);
                 }
                 
-                // Restaura o botão
                 setTimeout(() => { btn.innerHTML = textOrig; }, 500);
             }, 'image/png');
         });
